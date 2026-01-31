@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { formatCurrency } from "@/lib/utils/format";
 import styles from "./page.module.css";
 
@@ -181,7 +182,7 @@ export default function StatisticsPage() {
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
 
   if (loading) {
-    return <div>Caricamento...</div>;
+    return <LoadingSpinner />;
   }
 
   return (

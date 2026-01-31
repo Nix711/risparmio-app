@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import styles from "./page.module.css";
 
@@ -88,9 +89,15 @@ export default function ExpensesPage() {
       }
       const response = await fetch(url);
       const data = await response.json();
-      setExpenses(data);
+      if (Array.isArray(data)) {
+        setExpenses(data);
+      } else {
+        console.error("Errore API expenses:", data);
+        setExpenses([]);
+      }
     } catch (error) {
       console.error("Errore nel caricamento delle spese:", error);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
@@ -100,9 +107,15 @@ export default function ExpensesPage() {
     try {
       const response = await fetch("/api/categories");
       const data = await response.json();
-      setCategories(data);
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        console.error("Errore API categories:", data);
+        setCategories([]);
+      }
     } catch (error) {
       console.error("Errore nel caricamento delle categorie:", error);
+      setCategories([]);
     }
   }, []);
 
@@ -269,9 +282,7 @@ export default function ExpensesPage() {
       </div>
 
       {loading ? (
-        <div className={styles.emptyState}>
-          <p>Caricamento...</p>
-        </div>
+        <LoadingSpinner />
       ) : expenses.length > 0 ? (
         <div className={styles.expensesList}>
           {expenses.map((expense) => (

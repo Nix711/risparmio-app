@@ -24,7 +24,8 @@ export async function GET() {
     });
 
     return NextResponse.json(categories);
-  } catch {
+  } catch (error) {
+    console.error("Errore categories GET:", error);
     return NextResponse.json(
       { error: "Errore nel recupero delle categorie" },
       { status: 500 }
