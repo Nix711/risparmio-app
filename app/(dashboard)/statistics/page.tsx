@@ -385,24 +385,21 @@ export default function StatisticsPage() {
                 return (
                   <div key={cat.name} className={styles.categoryItem}>
                     <div className={styles.categoryInfo}>
-                      <span className={styles.categoryIcon}>
+                      <span
+                        className={styles.categoryIcon}
+                        style={{ backgroundColor: cat.color + "20" }}
+                      >
                         {cat.icon || "📦"}
                       </span>
                       <span className={styles.categoryName}>{cat.name}</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center" }}>
+                    <div className={styles.categoryRight}>
                       <span className={styles.categoryAmount}>
                         {formatCurrency(cat.value)}
                       </span>
-                      <div className={styles.categoryBar}>
-                        <div
-                          className={styles.categoryBarFill}
-                          style={{
-                            width: `${percentage}%`,
-                            backgroundColor: cat.color,
-                          }}
-                        />
-                      </div>
+                      <span className={styles.categoryPercentage}>
+                        {percentage.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
                 );
