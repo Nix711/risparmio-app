@@ -7,7 +7,78 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Test {
-  id   Int    @id @default(autoincrement())
-  name String
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories Category[]
+  expenses   Expense[]
+  goals      Goal[]
+  budgets    Budget[]
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  name      String
+  icon      String?
+  color     String  @default("#6366f1")
+  isDefault Boolean @default(false)
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@unique([name, userId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@index([userId, date])
+}
+
+model Goal {
+  id            String @id @default(cuid())
+  name          String
+  targetAmount  Float
+  currentAmount Float  @default(0)
+  type          String // "saving" = risparmio, "limit" = spesa massima
+  month         Int
+  year          Int
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name, month, year])
+}
+
+model Budget {
+  id     String @id @default(cuid())
+  amount Float
+  month  Int
+  year   Int
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId, month, year])
 }

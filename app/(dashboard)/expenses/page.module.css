@@ -1,0 +1,358 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filterLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.filterSelect {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.summary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summaryLabel {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin: 0 0 0.25rem;
+}
+
+.summaryValue {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.summaryCount {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.expensesList {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.expenseItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.expenseItem:last-child {
+  border-bottom: none;
+}
+
+.expenseInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.expenseIcon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.expenseDetails {
+  flex: 1;
+}
+
+.expenseCategory {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.expenseDescription {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0.125rem 0 0;
+}
+
+.expenseDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0.125rem 0 0;
+}
+
+.expenseAmount {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin-right: 1rem;
+}
+
+.expenseActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+
+.actionButton:hover {
+  background-color: #f3f4f6;
+}
+
+.deleteButton:hover {
+  background-color: #fee2e2;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.emptyText {
+  color: #6b7280;
+  margin: 0 0 1rem;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background-color: white;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.formActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.formActions button {
+  flex: 1;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .filters {
+    gap: 0.5rem;
+  }
+
+  .filterGroup {
+    flex: 1;
+    min-width: calc(50% - 0.25rem);
+  }
+
+  .filterLabel {
+    display: none;
+  }
+
+  .filterSelect {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1.25rem;
+  }
+
+  .summaryValue {
+    font-size: 1.5rem;
+  }
+
+  .expenseItem {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .expenseInfo {
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .expenseIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+
+  .expenseAmount {
+    margin-right: 0;
+    font-size: 0.9375rem;
+  }
+
+  .expenseActions {
+    gap: 0.25rem;
+  }
+
+  .actionButton {
+    padding: 0.375rem;
+  }
+
+  .emptyState {
+    padding: 2rem 1rem;
+  }
+
+  .emptyIcon {
+    font-size: 3rem;
+  }
+
+  .modalContent {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+  }
+
+  .modalHeader {
+    padding: 1rem;
+  }
+
+  .modalBody {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .filterGroup {
+    min-width: 100%;
+  }
+}
