@@ -258,6 +258,112 @@
   flex: 1;
 }
 
+/* Category select with add button */
+.categorySelectWrapper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.categorySelectWrapper .select {
+  flex: 1;
+}
+
+.addCategoryButton {
+  width: 44px;
+  height: 44px;
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  background: white;
+  color: #6366f1;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addCategoryButton:hover {
+  border-color: #6366f1;
+  background-color: #f5f3ff;
+}
+
+/* Icon and color grids */
+.iconGrid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.25rem;
+}
+
+.iconButton {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  background: #f3f4f6;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background: #e5e7eb;
+}
+
+.iconButtonActive {
+  border-color: #6366f1;
+  background: #f5f3ff;
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.25rem;
+}
+
+.colorButton {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 3px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.colorButton:hover {
+  transform: scale(1.1);
+}
+
+.colorButtonActive {
+  border-color: #1f2937;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #1f2937;
+}
+
+/* Category preview */
+.categoryPreview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.previewIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
   .header {
@@ -354,5 +460,19 @@
 @media (max-width: 400px) {
   .filterGroup {
     min-width: 100%;
+  }
+
+  .iconGrid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.375rem;
+  }
+
+  .colorGrid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.375rem;
+  }
+
+  .iconButton {
+    font-size: 1.5rem;
   }
 }
