@@ -9,11 +9,23 @@ import styles from "./page.module.css";
 async function getDashboardData(userId: string) {
   const { start, end } = getCurrentMonthRange();
 
-  const [expenses, goals, previousMonthExpenses] = await Promise.all([
+  const [expenses, incomes, goals, previousMonthExpenses, previousMonthIncomes] = await Promise.all([
+    // Solo spese (type = expense)
     prisma.expense.findMany({
       where: {
         userId,
         date: { gte: start, lte: end },
+        type: "expense",
+      },
+      include: { category: true },
+      orderBy: { date: "desc" },
+    }),
+    // Solo entrate (type = income)
+    prisma.expense.findMany({
+      where: {
+        userId,
+        date: { gte: start, lte: end },
+        type: "income",
       },
       include: { category: true },
       orderBy: { date: "desc" },
@@ -25,9 +37,23 @@ async function getDashboardData(userId: string) {
         year: start.getFullYear(),
       },
     }),
+    // Spese mese precedente
     prisma.expense.aggregate({
       where: {
         userId,
+        type: "expense",
+        date: {
+          gte: new Date(start.getFullYear(), start.getMonth() - 1, 1),
+          lt: start,
+        },
+      },
+      _sum: { amount: true },
+    }),
+    // Entrate mese precedente
+    prisma.expense.aggregate({
+      where: {
+        userId,
+        type: "income",
         date: {
           gte: new Date(start.getFullYear(), start.getMonth() - 1, 1),
           lt: start,
@@ -38,12 +64,23 @@ async function getDashboardData(userId: string) {
   ]);
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const previousTotal = previousMonthExpenses._sum.amount || 0;
-  const changePercent =
-    previousTotal > 0
-      ? ((totalExpenses - previousTotal) / previousTotal) * 100
+  const totalIncome = incomes.reduce((sum, e) => sum + e.amount, 0);
+  const netBalance = totalIncome - totalExpenses;
+
+  const previousExpenseTotal = previousMonthExpenses._sum.amount || 0;
+  const previousIncomeTotal = previousMonthIncomes._sum.amount || 0;
+
+  const expenseChangePercent =
+    previousExpenseTotal > 0
+      ? ((totalExpenses - previousExpenseTotal) / previousExpenseTotal) * 100
       : 0;
 
+  const incomeChangePercent =
+    previousIncomeTotal > 0
+      ? ((totalIncome - previousIncomeTotal) / previousIncomeTotal) * 100
+      : 0;
+
+  // Categorie solo per spese
   const categoryTotals = expenses.reduce(
     (acc, e) => {
       acc[e.category.name] = (acc[e.category.name] || 0) + e.amount;
@@ -56,13 +93,21 @@ async function getDashboardData(userId: string) {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3);
 
+  // Combina tutte le transazioni per "Ultime transazioni"
+  const allTransactions = [...expenses, ...incomes]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
   return {
     totalExpenses,
-    changePercent,
+    totalIncome,
+    netBalance,
+    expenseChangePercent,
+    incomeChangePercent,
     goals,
-    recentExpenses: expenses.slice(0, 5),
+    recentTransactions: allTransactions,
     topCategories,
-    expenseCount: expenses.length,
+    transactionCount: expenses.length + incomes.length,
   };
 }
 
@@ -91,7 +136,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Link href="/expenses">
-          <Button>+ Nuova Spesa</Button>
+          <Button>+ Nuova Transazione</Button>
         </Link>
       </header>
 
@@ -99,19 +144,31 @@ export default async function DashboardPage() {
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
             <p className={styles.statLabel}>Spese del mese</p>
-            <span className={styles.statIcon}>💰</span>
+            <span className={styles.statIcon}>💸</span>
           </div>
           <p className={styles.statValue}>
             {formatCurrency(data.totalExpenses)}
           </p>
-          {data.changePercent !== 0 && (
+          {data.expenseChangePercent !== 0 && (
             <p
-              className={`${styles.statChange} ${data.changePercent > 0 ? styles.negative : styles.positive}`}
+              className={`${styles.statChange} ${data.expenseChangePercent > 0 ? styles.negative : styles.positive}`}
             >
-              {data.changePercent > 0 ? "+" : ""}
-              {data.changePercent.toFixed(1)}% vs mese scorso
+              {data.expenseChangePercent > 0 ? "+" : ""}
+              {data.expenseChangePercent.toFixed(1)}% vs mese scorso
             </p>
           )}
+          <div className={styles.statBalanceBottom}>
+            <span className={styles.statBalanceLabel}>Entrate:</span>
+            <span className={`${styles.statBalanceValue} ${styles.positive}`}>
+              {formatCurrency(data.totalIncome)}
+            </span>
+          </div>
+          <div className={styles.statBalanceBottom}>
+            <span className={styles.statBalanceLabel}>Bilancio:</span>
+            <span className={`${styles.statBalanceValue} ${data.netBalance >= 0 ? styles.positive : styles.negative}`}>
+              {data.netBalance >= 0 ? "+" : ""}{formatCurrency(data.netBalance)}
+            </span>
+          </div>
         </div>
 
         <div className={styles.statCard}>
@@ -119,7 +176,7 @@ export default async function DashboardPage() {
             <p className={styles.statLabel}>Transazioni</p>
             <span className={styles.statIcon}>📝</span>
           </div>
-          <p className={styles.statValue}>{data.expenseCount}</p>
+          <p className={styles.statValue}>{data.transactionCount}</p>
         </div>
 
         <div className={styles.statCard}>
@@ -236,35 +293,35 @@ export default async function DashboardPage() {
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Ultime spese</h2>
+          <h2 className={styles.sectionTitle}>Ultime transazioni</h2>
           <Link href="/expenses">
             <Button variant="ghost" size="small">
               Vedi tutte
             </Button>
           </Link>
         </div>
-        {data.recentExpenses.length > 0 ? (
+        {data.recentTransactions.length > 0 ? (
           <div className={styles.recentList}>
-            {data.recentExpenses.map((expense) => (
-              <div key={expense.id} className={styles.recentItem}>
+            {data.recentTransactions.map((transaction) => (
+              <div key={transaction.id} className={styles.recentItem}>
                 <div className={styles.recentInfo}>
                   <div
                     className={styles.recentIcon}
-                    style={{ backgroundColor: expense.category.color + "20" }}
+                    style={{ backgroundColor: transaction.category.color + "20" }}
                   >
-                    {expense.category.icon || "📦"}
+                    {transaction.category.icon || "📦"}
                   </div>
                   <div className={styles.recentDetails}>
                     <span className={styles.recentCategory}>
-                      {expense.description || expense.category.name}
+                      {transaction.description || transaction.category.name}
                     </span>
                     <span className={styles.recentDate}>
-                      {formatDate(expense.date)}
+                      {formatDate(transaction.date)}
                     </span>
                   </div>
                 </div>
-                <span className={styles.recentAmount}>
-                  -{formatCurrency(expense.amount)}
+                <span className={transaction.type === "income" ? styles.recentAmountPositive : styles.recentAmount}>
+                  {transaction.type === "income" ? "+" : "-"}{formatCurrency(transaction.amount)}
                 </span>
               </div>
             ))}
@@ -273,7 +330,7 @@ export default async function DashboardPage() {
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>💰</div>
             <p className={styles.emptyText}>
-              Nessuna spesa registrata questo mese
+              Nessuna transazione registrata questo mese
             </p>
           </div>
         )}

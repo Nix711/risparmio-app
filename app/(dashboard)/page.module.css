@@ -49,6 +49,23 @@
   color: #ef4444;
 }
 
+.statBalanceBottom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.statBalanceLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.statBalanceValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .section {
   margin-bottom: 2rem;
 }
@@ -271,6 +288,12 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #ef4444;
+}
+
+.recentAmountPositive {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #22c55e;
 }
 
 .emptyState {

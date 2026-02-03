@@ -42,6 +42,7 @@ model Expense {
   amount      Float
   description String?
   date        DateTime
+  type        String   @default("expense") // "expense" | "income"
   createdAt   DateTime @default(now())
 
   userId String
@@ -51,6 +52,7 @@ model Expense {
   category   Category @relation(fields: [categoryId], references: [id])
 
   @@index([userId, date])
+  @@index([userId, type])
 }
 
 model Goal {

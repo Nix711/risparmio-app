@@ -21,6 +21,7 @@ interface Expense {
   amount: number;
   description: string | null;
   date: string;
+  type: "expense" | "income";
   category: Category;
 }
 
@@ -79,6 +80,7 @@ export default function ExpensesPage() {
   );
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedType, setSelectedType] = useState<"" | "expense" | "income">("");
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -86,6 +88,9 @@ export default function ExpensesPage() {
       let url = `/api/expenses?month=${selectedMonth}&year=${selectedYear}`;
       if (selectedCategory) {
         url += `&categoryId=${selectedCategory}`;
+      }
+      if (selectedType) {
+        url += `&type=${selectedType}`;
       }
       const response = await fetch(url);
       const data = await response.json();
@@ -96,12 +101,12 @@ export default function ExpensesPage() {
         setExpenses([]);
       }
     } catch (error) {
-      console.error("Errore nel caricamento delle spese:", error);
+      console.error("Errore nel caricamento delle transazioni:", error);
       setExpenses([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, selectedYear, selectedCategory]);
+  }, [selectedMonth, selectedYear, selectedCategory, selectedType]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -127,7 +132,13 @@ export default function ExpensesPage() {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = expenses
+    .filter((e) => e.type === "expense")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const totalIncome = expenses
+    .filter((e) => e.type === "income")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const netBalance = totalIncome - totalExpenses;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -138,6 +149,7 @@ export default function ExpensesPage() {
       description: formData.get("description") as string,
       categoryId: formData.get("categoryId") as string,
       date: formData.get("date") as string,
+      type: formData.get("type") as "expense" | "income",
     };
 
     try {
@@ -163,7 +175,7 @@ export default function ExpensesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Sei sicuro di voler eliminare questa spesa?")) return;
+    if (!confirm("Sei sicuro di voler eliminare questa transazione?")) return;
 
     try {
       await fetch(`/api/expenses/${id}`, { method: "DELETE" });
@@ -221,8 +233,8 @@ export default function ExpensesPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Spese</h1>
-        <Button onClick={() => setShowModal(true)}>+ Nuova Spesa</Button>
+        <h1 className={styles.title}>Transazioni</h1>
+        <Button onClick={() => setShowModal(true)}>+ Nuova Transazione</Button>
       </div>
 
       <div className={styles.filters}>
@@ -271,12 +283,35 @@ export default function ExpensesPage() {
             ))}
           </select>
         </div>
+
+        <div className={styles.filterGroup}>
+          <span className={styles.filterLabel}>Tipo:</span>
+          <select
+            className={styles.filterSelect}
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value as "" | "expense" | "income")}
+          >
+            <option value="">Tutti</option>
+            <option value="expense">Spese</option>
+            <option value="income">Entrate</option>
+          </select>
+        </div>
       </div>
 
       <div className={styles.summary}>
         <div>
-          <p className={styles.summaryLabel}>Totale spese</p>
+          <p className={styles.summaryLabel}>Spese</p>
           <p className={styles.summaryValue}>{formatCurrency(totalExpenses)}</p>
+        </div>
+        <div>
+          <p className={styles.summaryLabel}>Entrate</p>
+          <p className={styles.summaryValuePositive}>{formatCurrency(totalIncome)}</p>
+        </div>
+        <div>
+          <p className={styles.summaryLabel}>Bilancio</p>
+          <p className={netBalance >= 0 ? styles.summaryValuePositive : styles.summaryValue}>
+            {netBalance >= 0 ? "+" : ""}{formatCurrency(netBalance)}
+          </p>
         </div>
         <p className={styles.summaryCount}>{expenses.length} transazioni</p>
       </div>
@@ -308,8 +343,8 @@ export default function ExpensesPage() {
                   </p>
                 </div>
               </div>
-              <span className={styles.expenseAmount}>
-                -{formatCurrency(expense.amount)}
+              <span className={expense.type === "income" ? styles.expenseAmountPositive : styles.expenseAmount}>
+                {expense.type === "income" ? "+" : "-"}{formatCurrency(expense.amount)}
               </span>
               <div className={styles.expenseActions}>
                 <button
@@ -334,9 +369,9 @@ export default function ExpensesPage() {
         <div className={styles.expensesList}>
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>💰</div>
-            <p className={styles.emptyText}>Nessuna spesa per questo periodo</p>
+            <p className={styles.emptyText}>Nessuna transazione per questo periodo</p>
             <Button onClick={() => setShowModal(true)}>
-              Aggiungi la prima spesa
+              Aggiungi la prima transazione
             </Button>
           </div>
         </div>
@@ -350,7 +385,7 @@ export default function ExpensesPage() {
           >
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>
-                {editingExpense ? "Modifica Spesa" : "Nuova Spesa"}
+                {editingExpense ? "Modifica Transazione" : "Nuova Transazione"}
               </h2>
               <button className={styles.closeButton} onClick={closeModal}>
                 &times;
@@ -358,6 +393,19 @@ export default function ExpensesPage() {
             </div>
             <div className={styles.modalBody}>
               <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Tipo</label>
+                  <select
+                    name="type"
+                    className={styles.select}
+                    defaultValue={editingExpense?.type || "expense"}
+                    required
+                  >
+                    <option value="expense">Spesa</option>
+                    <option value="income">Entrata</option>
+                  </select>
+                </div>
+
                 <Input
                   name="amount"
                   type="number"
