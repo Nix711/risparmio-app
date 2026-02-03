@@ -177,6 +177,17 @@ export default async function DashboardPage() {
             <span className={styles.statIcon}>📝</span>
           </div>
           <p className={styles.statValue}>{data.transactionCount}</p>
+          {data.recentTransactions[0] && (
+            <div className={styles.statLastTransaction}>
+              <span className={styles.statBalanceLabel}>Ultima:</span>
+              <span className={styles.statLastTransactionText}>
+                {data.recentTransactions[0].category.icon || "📦"} {data.recentTransactions[0].category.name}
+              </span>
+              <span className={`${styles.statBalanceValue} ${data.recentTransactions[0].type === "income" ? styles.positive : styles.negative}`}>
+                {data.recentTransactions[0].type === "income" ? "+" : "-"}{formatCurrency(data.recentTransactions[0].amount)}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className={styles.statCard}>

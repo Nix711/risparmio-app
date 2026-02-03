@@ -66,6 +66,21 @@
   font-weight: 600;
 }
 
+.statLastTransaction {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.statLastTransactionText {
+  flex: 1;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
 .section {
   margin-bottom: 2rem;
 }

@@ -299,21 +299,41 @@ export default function ExpensesPage() {
       </div>
 
       <div className={styles.summary}>
-        <div>
-          <p className={styles.summaryLabel}>Spese</p>
-          <p className={styles.summaryValue}>{formatCurrency(totalExpenses)}</p>
-        </div>
-        <div>
-          <p className={styles.summaryLabel}>Entrate</p>
-          <p className={styles.summaryValuePositive}>{formatCurrency(totalIncome)}</p>
-        </div>
-        <div>
-          <p className={styles.summaryLabel}>Bilancio</p>
-          <p className={netBalance >= 0 ? styles.summaryValuePositive : styles.summaryValue}>
-            {netBalance >= 0 ? "+" : ""}{formatCurrency(netBalance)}
-          </p>
-        </div>
-        <p className={styles.summaryCount}>{expenses.length} transazioni</p>
+        {selectedType === "" ? (
+          <>
+            <div>
+              <p className={styles.summaryLabel}>Spese</p>
+              <p className={styles.summaryValue}>{formatCurrency(totalExpenses)}</p>
+            </div>
+            <div>
+              <p className={styles.summaryLabel}>Entrate</p>
+              <p className={styles.summaryValuePositive}>{formatCurrency(totalIncome)}</p>
+            </div>
+            <div>
+              <p className={styles.summaryLabel}>Bilancio</p>
+              <p className={netBalance >= 0 ? styles.summaryValuePositive : styles.summaryValue}>
+                {netBalance >= 0 ? "+" : ""}{formatCurrency(netBalance)}
+              </p>
+            </div>
+            <p className={styles.summaryCount}>{expenses.length} transazioni</p>
+          </>
+        ) : selectedType === "expense" ? (
+          <>
+            <div>
+              <p className={styles.summaryLabel}>Totale Spese</p>
+              <p className={styles.summaryValue}>{formatCurrency(totalExpenses)}</p>
+            </div>
+            <p className={styles.summaryCount}>{expenses.length} spese</p>
+          </>
+        ) : (
+          <>
+            <div>
+              <p className={styles.summaryLabel}>Totale Entrate</p>
+              <p className={styles.summaryValuePositive}>{formatCurrency(totalIncome)}</p>
+            </div>
+            <p className={styles.summaryCount}>{expenses.length} entrate</p>
+          </>
+        )}
       </div>
 
       {loading ? (
