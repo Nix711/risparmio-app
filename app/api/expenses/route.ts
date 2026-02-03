@@ -40,7 +40,8 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(expenses);
-  } catch {
+  } catch (error) {
+    console.error("Errore expenses GET:", error);
     return NextResponse.json(
       { error: "Errore nel recupero delle spese" },
       { status: 500 }

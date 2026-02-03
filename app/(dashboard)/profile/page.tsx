@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import styles from "./page.module.css";
 
 interface User {
@@ -144,7 +145,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <div>Caricamento...</div>;
+    return <LoadingSpinner />;
   }
 
   return (

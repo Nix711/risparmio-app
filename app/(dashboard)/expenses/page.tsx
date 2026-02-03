@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import styles from "./page.module.css";
 
@@ -38,6 +39,16 @@ const months = [
   { value: 12, label: "Dicembre" },
 ];
 
+const defaultColors = [
+  "#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
+  "#ec4899", "#6366f1", "#f97316", "#14b8a6", "#71717a",
+];
+
+const defaultIcons = [
+  "🛒", "🚗", "🏠", "💊", "🎬", "🛍️", "📄", "🍽️", "📱", "📦",
+  "✈️", "🎮", "📚", "🏋️", "🎁", "☕", "🍕", "🎵", "💼", "🐕",
+];
+
 export default function ExpensesPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -47,6 +58,11 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryIcon, setNewCategoryIcon] = useState("📦");
+  const [newCategoryColor, setNewCategoryColor] = useState("#6366f1");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
   const currentDate = new Date();
 
@@ -73,9 +89,15 @@ export default function ExpensesPage() {
       }
       const response = await fetch(url);
       const data = await response.json();
-      setExpenses(data);
+      if (Array.isArray(data)) {
+        setExpenses(data);
+      } else {
+        console.error("Errore API expenses:", data);
+        setExpenses([]);
+      }
     } catch (error) {
       console.error("Errore nel caricamento delle spese:", error);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
@@ -85,9 +107,15 @@ export default function ExpensesPage() {
     try {
       const response = await fetch("/api/categories");
       const data = await response.json();
-      setCategories(data);
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        console.error("Errore API categories:", data);
+        setCategories([]);
+      }
     } catch (error) {
       console.error("Errore nel caricamento delle categorie:", error);
+      setCategories([]);
     }
   }, []);
 
@@ -153,6 +181,36 @@ export default function ExpensesPage() {
   function closeModal() {
     setShowModal(false);
     setEditingExpense(null);
+    setSelectedCategoryId("");
+  }
+
+  async function handleCreateCategory(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+
+    try {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCategoryName,
+          icon: newCategoryIcon,
+          color: newCategoryColor,
+        }),
+      });
+
+      if (response.ok) {
+        const newCategory = await response.json();
+        await fetchCategories();
+        setSelectedCategoryId(newCategory.id);
+        setShowCategoryModal(false);
+        setNewCategoryName("");
+        setNewCategoryIcon("📦");
+        setNewCategoryColor("#6366f1");
+      }
+    } catch (error) {
+      console.error("Errore nella creazione della categoria:", error);
+    }
   }
 
   const years = Array.from(
@@ -224,9 +282,7 @@ export default function ExpensesPage() {
       </div>
 
       {loading ? (
-        <div className={styles.emptyState}>
-          <p>Caricamento...</p>
-        </div>
+        <LoadingSpinner />
       ) : expenses.length > 0 ? (
         <div className={styles.expensesList}>
           {expenses.map((expense) => (
@@ -315,19 +371,30 @@ export default function ExpensesPage() {
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Categoria</label>
-                  <select
-                    name="categoryId"
-                    className={styles.select}
-                    defaultValue={editingExpense?.category.id}
-                    required
-                  >
-                    <option value="">Seleziona categoria</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.icon} {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className={styles.categorySelectWrapper}>
+                    <select
+                      name="categoryId"
+                      className={styles.select}
+                      value={selectedCategoryId || editingExpense?.category.id || ""}
+                      onChange={(e) => setSelectedCategoryId(e.target.value)}
+                      required
+                    >
+                      <option value="">Seleziona categoria</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className={styles.addCategoryButton}
+                      onClick={() => setShowCategoryModal(true)}
+                      title="Aggiungi categoria"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
 
                 <Input
@@ -363,6 +430,90 @@ export default function ExpensesPage() {
                   <Button type="submit">
                     {editingExpense ? "Salva" : "Aggiungi"}
                   </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCategoryModal && (
+        <div className={styles.modal} onClick={() => setShowCategoryModal(false)}>
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Nuova Categoria</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowCategoryModal(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <form onSubmit={handleCreateCategory} className={styles.form}>
+                <Input
+                  name="categoryName"
+                  type="text"
+                  label="Nome categoria"
+                  placeholder="es. Palestra"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  required
+                />
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Icona</label>
+                  <div className={styles.iconGrid}>
+                    {defaultIcons.map((icon) => (
+                      <button
+                        key={icon}
+                        type="button"
+                        className={`${styles.iconButton} ${newCategoryIcon === icon ? styles.iconButtonActive : ""}`}
+                        onClick={() => setNewCategoryIcon(icon)}
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Colore</label>
+                  <div className={styles.colorGrid}>
+                    {defaultColors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`${styles.colorButton} ${newCategoryColor === color ? styles.colorButtonActive : ""}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setNewCategoryColor(color)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.categoryPreview}>
+                  <div
+                    className={styles.previewIcon}
+                    style={{ backgroundColor: newCategoryColor + "20" }}
+                  >
+                    {newCategoryIcon}
+                  </div>
+                  <span>{newCategoryName || "Anteprima"}</span>
+                </div>
+
+                <div className={styles.formActions}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowCategoryModal(false)}
+                  >
+                    Annulla
+                  </Button>
+                  <Button type="submit">Crea</Button>
                 </div>
               </form>
             </div>
