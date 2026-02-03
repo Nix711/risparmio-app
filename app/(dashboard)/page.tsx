@@ -127,7 +127,29 @@ export default async function DashboardPage() {
             <p className={styles.statLabel}>Goal attivi</p>
             <span className={styles.statIcon}>🎯</span>
           </div>
-          <p className={styles.statValue}>{data.goals.length}</p>
+          {data.goals.length > 0 ? (
+            <div
+              className={styles.goalsList}
+              data-count={data.goals.length}
+            >
+              {data.goals.map((goal) => {
+                const progress =
+                  goal.type === "saving"
+                    ? (goal.currentAmount / goal.targetAmount) * 100
+                    : (data.totalExpenses / goal.targetAmount) * 100;
+                return (
+                  <div key={goal.id} className={styles.goalsListItem}>
+                    <span className={styles.goalsListName}>{goal.name}</span>
+                    <span className={styles.goalsListPercent}>
+                      {Math.round(Math.min(progress, 100))}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className={styles.statValue}>-</p>
+          )}
         </div>
 
         <div className={styles.statCard}>
@@ -192,6 +214,9 @@ export default async function DashboardPage() {
                       {goal.type === "saving"
                         ? formatCurrency(goal.currentAmount)
                         : formatCurrency(data.totalExpenses)}
+                    </span>
+                    <span className={styles.goalPercentage}>
+                      {Math.round(Math.min(progress, 100))}%
                     </span>
                     <span>{formatCurrency(goal.targetAmount)}</span>
                   </div>

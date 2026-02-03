@@ -160,6 +160,11 @@
   color: #6b7280;
 }
 
+.goalPercentage {
+  font-weight: 600;
+  color: #111827;
+}
+
 .savingInput {
   display: flex;
   gap: 0.5rem;

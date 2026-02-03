@@ -155,6 +155,67 @@
   color: #6b7280;
 }
 
+.goalPercentage {
+  font-weight: 600;
+  color: #111827;
+}
+
+.goalsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* 1 goal: dimensione grande come statValue */
+.goalsList[data-count="1"] {
+  gap: 0;
+}
+
+.goalsList[data-count="1"] .goalsListName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.goalsList[data-count="1"] .goalsListPercent {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* 2 goal: dimensione media */
+.goalsList[data-count="2"] .goalsListName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.goalsList[data-count="2"] .goalsListPercent {
+  font-size: 1rem;
+}
+
+/* 3+ goal: dimensione piccola (default) */
+.goalsListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goalsListName {
+  font-size: 0.875rem;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.goalsListPercent {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
 .recentList {
   background: white;
   border-radius: 0.75rem;

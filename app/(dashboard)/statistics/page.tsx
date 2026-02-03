@@ -329,6 +329,9 @@ export default function StatisticsPage() {
                         ? formatCurrency(goal.currentAmount)
                         : formatCurrency(totalExpenses)}
                     </span>
+                    <span className={styles.goalPercentage}>
+                      {Math.round(Math.min(progress, 100))}%
+                    </span>
                     <span>{formatCurrency(goal.targetAmount)}</span>
                   </div>
                   {goal.type === "saving" && (
