@@ -33,7 +33,7 @@ export async function PUT(
       );
     }
 
-    const { amount, description, categoryId, date } = validated.data;
+    const { amount, description, categoryId, date, type } = validated.data;
 
     const expense = await prisma.expense.update({
       where: { id },
@@ -42,6 +42,7 @@ export async function PUT(
         ...(description !== undefined && { description }),
         ...(categoryId !== undefined && { categoryId }),
         ...(date !== undefined && { date: new Date(date) }),
+        ...(type !== undefined && { type }),
       },
       include: { category: true },
     });

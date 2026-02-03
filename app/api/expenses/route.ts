@@ -14,11 +14,13 @@ export async function GET(request: Request) {
     const month = searchParams.get("month");
     const year = searchParams.get("year");
     const categoryId = searchParams.get("categoryId");
+    const type = searchParams.get("type");
 
     const where: {
       userId: string;
       date?: { gte: Date; lte: Date };
       categoryId?: string;
+      type?: string;
     } = {
       userId: session.user.id,
     };
@@ -33,6 +35,10 @@ export async function GET(request: Request) {
       where.categoryId = categoryId;
     }
 
+    if (type && (type === "expense" || type === "income")) {
+      where.type = type;
+    }
+
     const expenses = await prisma.expense.findMany({
       where,
       include: { category: true },
@@ -43,7 +49,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Errore expenses GET:", error);
     return NextResponse.json(
-      { error: "Errore nel recupero delle spese" },
+      { error: "Errore nel recupero delle transazioni" },
       { status: 500 }
     );
   }
@@ -66,7 +72,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { amount, description, categoryId, date } = validated.data;
+    const { amount, description, categoryId, date, type } = validated.data;
 
     const expense = await prisma.expense.create({
       data: {
@@ -74,6 +80,7 @@ export async function POST(request: Request) {
         description,
         categoryId,
         date: new Date(date),
+        type: type || "expense",
         userId: session.user.id,
       },
       include: { category: true },
@@ -82,7 +89,7 @@ export async function POST(request: Request) {
     return NextResponse.json(expense, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Errore nella creazione della spesa" },
+      { error: "Errore nella creazione della transazione" },
       { status: 500 }
     );
   }
