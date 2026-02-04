@@ -31,6 +31,7 @@ interface Expense {
   id: string;
   amount: number;
   date: string;
+  type: "expense" | "income";
   category: Category;
 }
 
@@ -61,6 +62,7 @@ const months = [
 
 export default function StatisticsPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [incomes, setIncomes] = useState<Expense[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showGoalModal, setShowGoalModal] = useState(false);
@@ -72,15 +74,18 @@ export default function StatisticsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [expensesRes, goalsRes] = await Promise.all([
-        fetch(`/api/expenses?month=${selectedMonth}&year=${selectedYear}`),
+      const [expensesRes, incomesRes, goalsRes] = await Promise.all([
+        fetch(`/api/expenses?month=${selectedMonth}&year=${selectedYear}&type=expense`),
+        fetch(`/api/expenses?month=${selectedMonth}&year=${selectedYear}&type=income`),
         fetch(`/api/goals?month=${selectedMonth}&year=${selectedYear}`),
       ]);
-      const [expensesData, goalsData] = await Promise.all([
+      const [expensesData, incomesData, goalsData] = await Promise.all([
         expensesRes.json(),
+        incomesRes.json(),
         goalsRes.json(),
       ]);
       setExpenses(expensesData);
+      setIncomes(incomesData);
       setGoals(goalsData);
     } catch (error) {
       console.error("Errore nel caricamento:", error);
@@ -94,6 +99,8 @@ export default function StatisticsPage() {
   }, [fetchData]);
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalIncome = incomes.reduce((sum, e) => sum + e.amount, 0);
+  const netBalance = totalIncome - totalExpenses;
 
   // Dati per grafico a torta per categoria
   const categoryData = expenses.reduce(
@@ -114,22 +121,42 @@ export default function StatisticsPage() {
     [] as { name: string; value: number; color: string; icon: string | null }[]
   );
 
-  // Dati per grafico a barre per settimana
-  const weeklyData = expenses.reduce(
-    (acc, e) => {
+  // Dati per grafico a barre settimanali con spese ed entrate
+  const weeklyData = (() => {
+    const weeks: { week: string; spese: number; entrate: number }[] = [];
+
+    // Processa spese
+    expenses.forEach((e) => {
       const date = new Date(e.date);
       const weekNum = Math.ceil(date.getDate() / 7);
       const weekLabel = `Sett. ${weekNum}`;
-      const existing = acc.find((item) => item.week === weekLabel);
-      if (existing) {
-        existing.amount += e.amount;
-      } else {
-        acc.push({ week: weekLabel, amount: e.amount });
+      let existing = weeks.find((item) => item.week === weekLabel);
+      if (!existing) {
+        existing = { week: weekLabel, spese: 0, entrate: 0 };
+        weeks.push(existing);
       }
-      return acc;
-    },
-    [] as { week: string; amount: number }[]
-  );
+      existing.spese += e.amount;
+    });
+
+    // Processa entrate
+    incomes.forEach((e) => {
+      const date = new Date(e.date);
+      const weekNum = Math.ceil(date.getDate() / 7);
+      const weekLabel = `Sett. ${weekNum}`;
+      let existing = weeks.find((item) => item.week === weekLabel);
+      if (!existing) {
+        existing = { week: weekLabel, spese: 0, entrate: 0 };
+        weeks.push(existing);
+      }
+      existing.entrate += e.amount;
+    });
+
+    return weeks.sort((a, b) => {
+      const aNum = parseInt(a.week.replace("Sett. ", ""));
+      const bNum = parseInt(b.week.replace("Sett. ", ""));
+      return aNum - bNum;
+    });
+  })();
 
   async function handleCreateGoal(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -216,6 +243,31 @@ export default function StatisticsPage() {
         </select>
       </div>
 
+      <div className={styles.summaryCards}>
+        <div className={styles.summaryCard}>
+          <p className={styles.summaryCardLabel}>Totale Spese</p>
+          <p className={styles.summaryCardValue} style={{ color: "#ef4444" }}>
+            {formatCurrency(totalExpenses)}
+          </p>
+        </div>
+        <div className={styles.summaryCard}>
+          <p className={styles.summaryCardLabel}>Totale Entrate</p>
+          <p className={styles.summaryCardValue} style={{ color: "#22c55e" }}>
+            {formatCurrency(totalIncome)}
+          </p>
+        </div>
+        <div className={styles.summaryCard}>
+          <p className={styles.summaryCardLabel}>Bilancio Netto</p>
+          <p
+            className={styles.summaryCardValue}
+            style={{ color: netBalance >= 0 ? "#22c55e" : "#ef4444" }}
+          >
+            {netBalance >= 0 ? "+" : ""}
+            {formatCurrency(netBalance)}
+          </p>
+        </div>
+      </div>
+
       <div className={styles.grid}>
         <div className={styles.chartCard}>
           <h3 className={styles.chartTitle}>Spese per Categoria</h3>
@@ -253,7 +305,7 @@ export default function StatisticsPage() {
         </div>
 
         <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>Spese Settimanali</h3>
+          <h3 className={styles.chartTitle}>Spese vs Entrate Settimanali</h3>
           <div className={styles.chartContainer}>
             {weeklyData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -265,7 +317,8 @@ export default function StatisticsPage() {
                     formatter={(value) => formatCurrency(value as number)}
                   />
                   <Legend />
-                  <Bar dataKey="amount" fill="#6366f1" name="Spese" />
+                  <Bar dataKey="spese" fill="#ef4444" name="Spese" />
+                  <Bar dataKey="entrate" fill="#22c55e" name="Entrate" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -328,6 +381,9 @@ export default function StatisticsPage() {
                       {goal.type === "saving"
                         ? formatCurrency(goal.currentAmount)
                         : formatCurrency(totalExpenses)}
+                    </span>
+                    <span className={styles.goalPercentage}>
+                      {Math.round(Math.min(progress, 100))}%
                     </span>
                     <span>{formatCurrency(goal.targetAmount)}</span>
                   </div>

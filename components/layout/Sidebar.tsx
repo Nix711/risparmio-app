@@ -49,7 +49,7 @@ const icons = {
 
 const navItems = [
   { href: "/", icon: icons.dashboard, label: "Dashboard" },
-  { href: "/expenses", icon: icons.expenses, label: "Spese" },
+  { href: "/expenses", icon: icons.expenses, label: "Transazioni" },
   { href: "/statistics", icon: icons.statistics, label: "Statistiche" },
   { href: "/profile", icon: icons.profile, label: "Profilo" },
 ];
@@ -134,7 +134,7 @@ export function Sidebar({ user }: SidebarProps) {
           className={`${styles.bottomNavItem} ${pathname === "/expenses" ? styles.bottomNavItemActive : ""}`}
         >
           {icons.expenses}
-          <span className={styles.bottomNavLabel}>Spese</span>
+          <span className={styles.bottomNavLabel}>Trans.</span>
         </Link>
 
         <Link href="/expenses?add=true" className={styles.addButton}>
