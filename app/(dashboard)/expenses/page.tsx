@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -50,7 +50,7 @@ const defaultIcons = [
   "✈️", "🎮", "📚", "🏋️", "🎁", "☕", "🍕", "🎵", "💼", "🐕",
 ];
 
-export default function ExpensesPage() {
+function ExpensesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -66,21 +66,75 @@ export default function ExpensesPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
   const currentDate = new Date();
+  const FILTERS_STORAGE_KEY = "expenses-filters";
+
+  // Controlla se l'URL ha filtri espliciti (escludendo "add")
+  const hasUrlFilters = ["month", "year", "category", "type"].some(
+    (key) => searchParams.has(key)
+  );
+
+  // Se l'URL non ha filtri, ripristina da localStorage e aggiorna l'URL
+  const [restoredFromStorage, setRestoredFromStorage] = useState(false);
+  useEffect(() => {
+    if (!hasUrlFilters && !restoredFromStorage) {
+      try {
+        const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const params = new URLSearchParams();
+          if (parsed.month) params.set("month", parsed.month);
+          if (parsed.year) params.set("year", parsed.year);
+          if (parsed.category) params.set("category", parsed.category);
+          if (parsed.type) params.set("type", parsed.type);
+          if (params.toString()) {
+            router.replace(`/expenses?${params.toString()}`, { scroll: false });
+          }
+        }
+      } catch {}
+      setRestoredFromStorage(true);
+    }
+  }, [hasUrlFilters, restoredFromStorage, router]);
+
+  // Leggi i filtri dall'URL (con fallback ai valori di default)
+  const selectedMonth = Number(searchParams.get("month")) || (currentDate.getMonth() + 1);
+  const selectedYear = Number(searchParams.get("year")) || currentDate.getFullYear();
+  const selectedCategory = searchParams.get("category") || "";
+  const selectedType = (searchParams.get("type") || "") as "" | "expense" | "income";
+
+  // Salva i filtri in localStorage ogni volta che cambiano
+  useEffect(() => {
+    if (hasUrlFilters) {
+      const filters: Record<string, string> = {};
+      if (searchParams.get("month")) filters.month = searchParams.get("month")!;
+      if (searchParams.get("year")) filters.year = searchParams.get("year")!;
+      if (searchParams.get("category")) filters.category = searchParams.get("category")!;
+      if (searchParams.get("type")) filters.type = searchParams.get("type")!;
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    }
+  }, [searchParams, hasUrlFilters]);
+
+  // Funzione helper per aggiornare i search params nell'URL
+  const updateFilter = useCallback((key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.push(`/expenses?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
 
   // Apri modal se c'è ?add=true nell'URL
   useEffect(() => {
     if (searchParams.get("add") === "true") {
       setShowModal(true);
-      // Rimuovi il parametro dall'URL
-      router.replace("/expenses", { scroll: false });
+      // Rimuovi solo il parametro add, mantieni i filtri
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("add");
+      const newUrl = params.toString() ? `/expenses?${params.toString()}` : "/expenses";
+      router.replace(newUrl, { scroll: false });
     }
   }, [searchParams, router]);
-  const [selectedMonth, setSelectedMonth] = useState(
-    currentDate.getMonth() + 1,
-  );
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedType, setSelectedType] = useState<"" | "expense" | "income">("");
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -243,7 +297,7 @@ export default function ExpensesPage() {
           <select
             className={styles.filterSelect}
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            onChange={(e) => updateFilter("month", e.target.value)}
           >
             {months.map((m) => (
               <option key={m.value} value={m.value}>
@@ -258,7 +312,7 @@ export default function ExpensesPage() {
           <select
             className={styles.filterSelect}
             value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            onChange={(e) => updateFilter("year", e.target.value)}
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -273,7 +327,7 @@ export default function ExpensesPage() {
           <select
             className={styles.filterSelect}
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => updateFilter("category", e.target.value)}
           >
             <option value="">Tutte</option>
             {categories.map((c) => (
@@ -289,7 +343,7 @@ export default function ExpensesPage() {
           <select
             className={styles.filterSelect}
             value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value as "" | "expense" | "income")}
+            onChange={(e) => updateFilter("type", e.target.value)}
           >
             <option value="">Tutti</option>
             <option value="expense">Spese</option>
@@ -589,5 +643,13 @@ export default function ExpensesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ExpensesPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ExpensesPageContent />
+    </Suspense>
   );
 }

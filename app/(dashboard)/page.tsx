@@ -179,7 +179,6 @@ export default async function DashboardPage() {
           <p className={styles.statValue}>{data.transactionCount}</p>
           {data.recentTransactions[0] && (
             <div className={styles.statLastTransaction}>
-              <span className={styles.statBalanceLabel}>Ultima:</span>
               <span className={styles.statLastTransactionText}>
                 {data.recentTransactions[0].category.icon || "📦"} {data.recentTransactions[0].category.name}
               </span>
