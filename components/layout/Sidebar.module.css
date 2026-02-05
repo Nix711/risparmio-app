@@ -30,6 +30,19 @@
   margin: 0;
 }
 
+.logoTextBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.logoSubtext {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.1;
+}
+
 .nav {
   flex: 1;
   padding: 1rem 0;
