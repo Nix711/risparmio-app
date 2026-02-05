@@ -378,6 +378,44 @@
   font-size: 1.25rem;
 }
 
+/* Type toggle */
+.typeToggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  gap: 0.25rem;
+}
+
+.typeToggleButton {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.typeToggleButton:hover {
+  color: #374151;
+}
+
+.typeToggleExpenseActive,
+.typeToggleIncomeActive {
+  background: #6366f1;
+  color: white;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+}
+
+.typeToggleExpenseActive:hover,
+.typeToggleIncomeActive:hover {
+  color: white;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
   .header {

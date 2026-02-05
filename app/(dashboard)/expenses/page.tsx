@@ -64,6 +64,7 @@ function ExpensesPageContent() {
   const [newCategoryIcon, setNewCategoryIcon] = useState("📦");
   const [newCategoryColor, setNewCategoryColor] = useState("#6366f1");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [formType, setFormType] = useState<"expense" | "income">("expense");
 
   const currentDate = new Date();
   const FILTERS_STORAGE_KEY = "expenses-filters";
@@ -241,6 +242,7 @@ function ExpensesPageContent() {
 
   function openEditModal(expense: Expense) {
     setEditingExpense(expense);
+    setFormType(expense.type);
     setShowModal(true);
   }
 
@@ -248,6 +250,7 @@ function ExpensesPageContent() {
     setShowModal(false);
     setEditingExpense(null);
     setSelectedCategoryId("");
+    setFormType("expense");
   }
 
   async function handleCreateCategory(e: React.FormEvent) {
@@ -467,17 +470,22 @@ function ExpensesPageContent() {
             </div>
             <div className={styles.modalBody}>
               <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Tipo</label>
-                  <select
-                    name="type"
-                    className={styles.select}
-                    defaultValue={editingExpense?.type || "expense"}
-                    required
+                <input type="hidden" name="type" value={formType} />
+                <div className={styles.typeToggle}>
+                  <button
+                    type="button"
+                    className={`${styles.typeToggleButton} ${formType === "expense" ? styles.typeToggleExpenseActive : ""}`}
+                    onClick={() => setFormType("expense")}
                   >
-                    <option value="expense">Spesa</option>
-                    <option value="income">Entrata</option>
-                  </select>
+                    Spesa
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.typeToggleButton} ${formType === "income" ? styles.typeToggleIncomeActive : ""}`}
+                    onClick={() => setFormType("income")}
+                  >
+                    Entrata
+                  </button>
                 </div>
 
                 <Input
