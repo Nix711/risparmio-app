@@ -66,6 +66,7 @@ export default function StatisticsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showGoalModal, setShowGoalModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
@@ -215,33 +216,46 @@ export default function StatisticsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Statistiche</h1>
+        <div className={styles.headerRow}>
+          <h1 className={styles.title}>Statistiche</h1>
+          <button
+            className={`${styles.filterToggleButton} ${showFilters ? styles.filterToggleButtonActive : ""}`}
+            onClick={() => setShowFilters(!showFilters)}
+            title="Filtri"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <div className={styles.filters}>
-        <select
-          className={styles.filterSelect}
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-        >
-          {months.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-        <select
-          className={styles.filterSelect}
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-        >
-          {years.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
-      </div>
+      {showFilters && (
+        <div className={styles.filters}>
+          <select
+            className={styles.filterSelect}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+          >
+            {months.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className={styles.filterSelect}
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className={styles.summaryCards}>
         <div className={styles.summaryCard}>
