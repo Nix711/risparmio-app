@@ -65,6 +65,7 @@ function ExpensesPageContent() {
   const [newCategoryColor, setNewCategoryColor] = useState("#6366f1");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [formType, setFormType] = useState<"expense" | "income">("expense");
+  const [showFilters, setShowFilters] = useState(false);
 
   const currentDate = new Date();
   const FILTERS_STORAGE_KEY = "expenses-filters";
@@ -290,70 +291,103 @@ function ExpensesPageContent() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Transazioni</h1>
-        <Button onClick={() => setShowModal(true)}>+ Nuova Transazione</Button>
-      </div>
-
-      <div className={styles.filters}>
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Mese:</span>
-          <select
-            className={styles.filterSelect}
-            value={selectedMonth}
-            onChange={(e) => updateFilter("month", e.target.value)}
-          >
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+        <div className={styles.headerRow}>
+          <h1 className={styles.title}>Transazioni</h1>
+          <div className={styles.headerAddDesktop}>
+            <button
+              className={`${styles.filterToggleButton} ${showFilters ? styles.filterToggleButtonActive : ""}`}
+              onClick={() => setShowFilters(!showFilters)}
+              title="Filtri"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              {(selectedCategory || selectedType) && (
+                <span className={styles.filterBadge} />
+              )}
+            </button>
+            <Button onClick={() => setShowModal(true)}>+ Nuova Transazione</Button>
+          </div>
         </div>
-
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Anno:</span>
-          <select
-            className={styles.filterSelect}
-            value={selectedYear}
-            onChange={(e) => updateFilter("year", e.target.value)}
+        <div className={styles.headerMobileRow}>
+          <Button onClick={() => setShowModal(true)}>+ Nuova Transazione</Button>
+          <button
+            className={`${styles.filterToggleButton} ${showFilters ? styles.filterToggleButtonActive : ""}`}
+            onClick={() => setShowFilters(!showFilters)}
+            title="Filtri"
           >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Categoria:</span>
-          <select
-            className={styles.filterSelect}
-            value={selectedCategory}
-            onChange={(e) => updateFilter("category", e.target.value)}
-          >
-            <option value="">Tutte</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.icon} {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>Tipo:</span>
-          <select
-            className={styles.filterSelect}
-            value={selectedType}
-            onChange={(e) => updateFilter("type", e.target.value)}
-          >
-            <option value="">Tutti</option>
-            <option value="expense">Spese</option>
-            <option value="income">Entrate</option>
-          </select>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            {(selectedCategory || selectedType) && (
+              <span className={styles.filterBadge} />
+            )}
+          </button>
         </div>
       </div>
+
+      {showFilters && (
+        <div className={styles.filters}>
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Mese:</span>
+            <select
+              className={styles.filterSelect}
+              value={selectedMonth}
+              onChange={(e) => updateFilter("month", e.target.value)}
+            >
+              {months.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Anno:</span>
+            <select
+              className={styles.filterSelect}
+              value={selectedYear}
+              onChange={(e) => updateFilter("year", e.target.value)}
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Categoria:</span>
+            <select
+              className={styles.filterSelect}
+              value={selectedCategory}
+              onChange={(e) => updateFilter("category", e.target.value)}
+            >
+              <option value="">Tutte</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.icon} {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Tipo:</span>
+            <select
+              className={styles.filterSelect}
+              value={selectedType}
+              onChange={(e) => updateFilter("type", e.target.value)}
+            >
+              <option value="">Tutti</option>
+              <option value="expense">Spese</option>
+              <option value="income">Entrate</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       <div className={styles.summary}>
         {selectedType === "" ? (
