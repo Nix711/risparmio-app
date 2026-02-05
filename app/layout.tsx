@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Risparmio - Gestione Spese",
-  description: "App per la gestione delle spese personali",
+  title: "BalanceBook -- controllo delle finanze",
+  description: "BalanceBook -- controllo delle finanze personali",
+  icons: {
+    icon: "/favicon.webp",
+  },
 };
 
 export const viewport = {
