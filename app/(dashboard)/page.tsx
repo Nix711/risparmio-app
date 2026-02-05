@@ -120,30 +120,20 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <header className={styles.sectionHeader}>
+      <header className={styles.dashboardHeader}>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0 }}>
-            Dashboard
-          </h1>
-          <p
-            style={{
-              color: "#6b7280",
-              margin: "0.25rem 0 0",
-              fontSize: "0.875rem",
-            }}
-          >
-            {currentMonth}
-          </p>
+          <h1 className={styles.dashboardTitle}>Dashboard</h1>
+          <p className={styles.dashboardSubtitle}>{currentMonth}</p>
         </div>
         <Link href="/expenses">
           <Button>+ Nuova Transazione</Button>
         </Link>
       </header>
 
-      <div className={styles.grid}>
-        <div className={styles.statCard}>
+      <div className={styles.mainCards}>
+        <div className={`${styles.statCard} ${styles.statCardExpense}`}>
           <div className={styles.statHeader}>
-            <p className={styles.statLabel}>Spese del mese</p>
+            <p className={styles.statLabel}>Spese</p>
             <span className={styles.statIcon}>💸</span>
           </div>
           <p className={styles.statValue}>
@@ -157,20 +147,35 @@ export default async function DashboardPage() {
               {data.expenseChangePercent.toFixed(1)}% vs mese scorso
             </p>
           )}
-          <div className={styles.statBalanceBottom}>
-            <span className={styles.statBalanceLabel}>Entrate:</span>
-            <span className={`${styles.statBalanceValue} ${styles.positive}`}>
-              {formatCurrency(data.totalIncome)}
-            </span>
-          </div>
-          <div className={styles.statBalanceBottom}>
-            <span className={styles.statBalanceLabel}>Bilancio:</span>
-            <span className={`${styles.statBalanceValue} ${data.netBalance >= 0 ? styles.positive : styles.negative}`}>
-              {data.netBalance >= 0 ? "+" : ""}{formatCurrency(data.netBalance)}
-            </span>
-          </div>
         </div>
 
+        <div className={`${styles.statCard} ${styles.statCardIncome}`}>
+          <div className={styles.statHeader}>
+            <p className={styles.statLabel}>Entrate</p>
+            <span className={styles.statIcon}>💰</span>
+          </div>
+          <p className={styles.statValue}>
+            {formatCurrency(data.totalIncome)}
+          </p>
+          {data.incomeChangePercent !== 0 && (
+            <p
+              className={`${styles.statChange} ${data.incomeChangePercent > 0 ? styles.positive : styles.negative}`}
+            >
+              {data.incomeChangePercent > 0 ? "+" : ""}
+              {data.incomeChangePercent.toFixed(1)}% vs mese scorso
+            </p>
+          )}
+        </div>
+
+        <div className={styles.balanceCard}>
+          <p className={styles.balanceLabel}>Bilancio</p>
+          <p className={styles.balanceValue}>
+            {data.netBalance >= 0 ? "+" : ""}{formatCurrency(data.netBalance)}
+          </p>
+        </div>
+      </div>
+
+      <div className={styles.grid}>
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
             <p className={styles.statLabel}>Transazioni</p>
