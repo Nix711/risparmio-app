@@ -7,8 +7,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className={styles.wrapper}>
         <div className={styles.logo}>
           <div className={styles.logoIcon}>💰</div>
-          <h1 className={styles.logoText}>Risparmio</h1>
-          <p className={styles.logoSubtext}>Gestisci le tue finanze</p>
+          <h1 className={styles.logoText}>BalanceBook</h1>
+          <p className={styles.logoSubtext}>controllo delle finanze</p>
         </div>
         {children}
       </div>

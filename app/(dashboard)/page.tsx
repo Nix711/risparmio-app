@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentMonthRange, formatMonthYear } from "@/lib/utils/date";
+import { getCurrentMonthRange } from "@/lib/utils/date";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
 import styles from "./page.module.css";
@@ -116,14 +116,13 @@ export default async function DashboardPage() {
   if (!session?.user?.id) return null;
 
   const data = await getDashboardData(session.user.id);
-  const currentMonth = formatMonthYear(new Date());
+  const userName = session.user.name || "utente";
 
   return (
     <div>
       <header className={styles.dashboardHeader}>
         <div>
-          <h1 className={styles.dashboardTitle}>Dashboard</h1>
-          <p className={styles.dashboardSubtitle}>{currentMonth}</p>
+          <h1 className={styles.dashboardTitle}>Ciao {userName}</h1>
         </div>
         <Link href="/expenses">
           <Button>+ Nuova Transazione</Button>

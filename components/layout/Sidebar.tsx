@@ -78,7 +78,10 @@ export function Sidebar({ user }: SidebarProps) {
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>💰</span>
-          <h1 className={styles.logoText}>Risparmio</h1>
+          <div className={styles.logoTextBlock}>
+            <h1 className={styles.logoText}>BalanceBook</h1>
+            <p className={styles.logoSubtext}>controllo delle finanze</p>
+          </div>
         </div>
 
         <nav className={styles.nav}>
