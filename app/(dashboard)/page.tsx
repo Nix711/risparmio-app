@@ -115,7 +115,21 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const data = await getDashboardData(session.user.id);
+  let data;
+  try {
+    data = await getDashboardData(session.user.id);
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    return (
+      <div style={{ padding: "2rem" }}>
+        <h1>Errore nel caricamento della dashboard</h1>
+        <pre style={{ background: "#fee2e2", padding: "1rem", borderRadius: "0.5rem", whiteSpace: "pre-wrap" }}>
+          {error instanceof Error ? error.message : String(error)}
+        </pre>
+      </div>
+    );
+  }
+
   const userName = session.user.name || "utente";
 
   return (
