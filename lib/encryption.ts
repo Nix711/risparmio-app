@@ -31,7 +31,7 @@ export function encrypt(text: string): string {
 
 export function decrypt(encryptedText: string): string {
   if (!process.env.ENCRYPTION_KEY) {
-    // No key available, return as-is
+    console.error("[ENCRYPTION] ENCRYPTION_KEY is missing! Length:", process.env.ENCRYPTION_KEY?.length);
     return encryptedText;
   }
 
@@ -59,8 +59,8 @@ export function decrypt(encryptedText: string): string {
     ]);
 
     return decrypted.toString("utf8");
-  } catch {
-    // If decryption fails, assume plain text (backward compatibility)
+  } catch (err) {
+    console.error("[ENCRYPTION] Decrypt failed:", err instanceof Error ? err.message : err, "| Key length:", process.env.ENCRYPTION_KEY?.length);
     return encryptedText;
   }
 }
