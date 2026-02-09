@@ -247,3 +247,36 @@
     min-width: calc(100% - 100px);
   }
 }
+
+.logoutSection {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .logoutSection {
+    display: block;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .logoutButton {
+    width: 100%;
+    padding: 0.875rem;
+    background-color: transparent;
+    border: 1px solid #ef4444;
+    border-radius: 0.75rem;
+    color: #ef4444;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .logoutButton:hover {
+    background-color: #fef2f2;
+  }
+
+  .logoutButton:active {
+    background-color: #fee2e2;
+  }
+}
