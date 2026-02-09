@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -278,6 +279,15 @@ export default function ProfilePage() {
             </Button>
           </form>
         </div>
+      </div>
+
+      <div className={styles.logoutSection}>
+        <button
+          className={styles.logoutButton}
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
+          Esci dall&apos;account
+        </button>
       </div>
     </div>
   );
