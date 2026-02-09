@@ -30,7 +30,11 @@ export function encrypt(text: string): string {
 }
 
 export function decrypt(encryptedText: string): string {
-  const key = getKey();
+  if (!process.env.ENCRYPTION_KEY) {
+    // No key available, return as-is
+    return encryptedText;
+  }
+
   const parts = encryptedText.split(":");
 
   if (parts.length !== 3) {
@@ -39,6 +43,7 @@ export function decrypt(encryptedText: string): string {
   }
 
   try {
+    const key = getKey();
     const iv = Buffer.from(parts[0], "base64");
     const authTag = Buffer.from(parts[1], "base64");
     const encrypted = Buffer.from(parts[2], "base64");
