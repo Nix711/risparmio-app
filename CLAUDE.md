@@ -6,7 +6,7 @@
 - **ORM**: Prisma 6.19.1 — usa `$extends` per le query extensions, NON `$use` (rimosso in v6)
 - **Auth**: NextAuth v5 beta — JWT strategy, credentials provider
 - **Styling**: CSS Modules (`.module.css`) per ogni componente/pagina
-- **Charts**: Recharts (statistics page) + SVG server-side (dashboard trend)
+- **Charts**: Chart.js + react-chartjs-2 (statistics page) + SVG server-side (dashboard trend)
 - **Font**: Inter via `next/font/google`
 
 ---
