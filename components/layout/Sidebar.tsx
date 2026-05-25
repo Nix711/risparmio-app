@@ -12,65 +12,55 @@ interface SidebarProps {
   };
 }
 
-// Icone SVG per la bottom bar
 const icons = {
   dashboard: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   ),
   expenses: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-      <line x1="1" y1="10" x2="23" y2="10"></line>
-    </svg>
-  ),
-  add: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
     </svg>
   ),
   statistics: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10"></line>
-      <line x1="12" y1="20" x2="12" y2="4"></line>
-      <line x1="6" y1="20" x2="6" y2="14"></line>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
     </svg>
   ),
   profile: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  add: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
 };
 
 const navItems = [
-  { href: "/", icon: icons.dashboard, label: "Dashboard" },
-  { href: "/expenses", icon: icons.expenses, label: "Transazioni" },
-  { href: "/statistics", icon: icons.statistics, label: "Statistiche" },
+  { href: "/", icon: icons.dashboard, label: "Home" },
+  { href: "/expenses", icon: icons.expenses, label: "Trans." },
+  { href: "/statistics", icon: icons.statistics, label: "Stats" },
   { href: "/profile", icon: icons.profile, label: "Profilo" },
 ];
 
+function getInitials(name?: string | null, email?: string | null): string {
+  if (name) return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  if (email) return email[0].toUpperCase();
+  return "U";
+}
+
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
-
-  function getInitials(name?: string | null, email?: string | null): string {
-    if (name) {
-      return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    if (email) {
-      return email[0].toUpperCase();
-    }
-    return "U";
-  }
 
   return (
     <>
@@ -79,8 +69,8 @@ export function Sidebar({ user }: SidebarProps) {
         <div className={styles.logo}>
           <span className={styles.logoIcon}>💰</span>
           <div className={styles.logoTextBlock}>
-            <h1 className={styles.logoText}>BalanceBook</h1>
-            <p className={styles.logoSubtext}>controllo delle finanze</p>
+            <h1 className={styles.logoText}>Risparmio</h1>
+            <p className={styles.logoSubtext}>finanze personali</p>
           </div>
         </div>
 
@@ -108,7 +98,7 @@ export function Sidebar({ user }: SidebarProps) {
             <div className={styles.avatar}>
               {getInitials(user.name, user.email)}
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <p className={styles.userName}>{user.name || "Utente"}</p>
               <p className={styles.userEmail}>{user.email}</p>
             </div>
@@ -124,41 +114,46 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Mobile Bottom Navigation */}
       <nav className={styles.bottomNav}>
-        <Link
-          href="/"
-          className={`${styles.bottomNavItem} ${pathname === "/" ? styles.bottomNavItemActive : ""}`}
-        >
-          {icons.dashboard}
-          <span className={styles.bottomNavLabel}>Home</span>
-        </Link>
+        <div className={styles.bottomNavPill}>
+          <Link
+            href="/"
+            className={`${styles.bottomNavItem} ${pathname === "/" ? styles.bottomNavItemActive : ""}`}
+          >
+            {icons.dashboard}
+            <span className={styles.bottomNavLabel}>Home</span>
+          </Link>
 
-        <Link
-          href="/expenses"
-          className={`${styles.bottomNavItem} ${pathname === "/expenses" ? styles.bottomNavItemActive : ""}`}
-        >
-          {icons.expenses}
-          <span className={styles.bottomNavLabel}>Trans.</span>
-        </Link>
+          <Link
+            href="/expenses"
+            className={`${styles.bottomNavItem} ${pathname === "/expenses" ? styles.bottomNavItemActive : ""}`}
+          >
+            {icons.expenses}
+            <span className={styles.bottomNavLabel}>Trans.</span>
+          </Link>
 
-        <Link href="/expenses?add=true" className={styles.addButton}>
-          {icons.add}
-        </Link>
+          <div className={styles.fabWrapper}>
+            <Link href="/expenses?add=true" className={styles.addButton}>
+              {icons.add}
+            </Link>
+            <span className={styles.fabLabel}>Aggiungi</span>
+          </div>
 
-        <Link
-          href="/statistics"
-          className={`${styles.bottomNavItem} ${pathname === "/statistics" ? styles.bottomNavItemActive : ""}`}
-        >
-          {icons.statistics}
-          <span className={styles.bottomNavLabel}>Stats</span>
-        </Link>
+          <Link
+            href="/statistics"
+            className={`${styles.bottomNavItem} ${pathname === "/statistics" ? styles.bottomNavItemActive : ""}`}
+          >
+            {icons.statistics}
+            <span className={styles.bottomNavLabel}>Stats</span>
+          </Link>
 
-        <Link
-          href="/profile"
-          className={`${styles.bottomNavItem} ${pathname === "/profile" ? styles.bottomNavItemActive : ""}`}
-        >
-          {icons.profile}
-          <span className={styles.bottomNavLabel}>Profilo</span>
-        </Link>
+          <Link
+            href="/profile"
+            className={`${styles.bottomNavItem} ${pathname === "/profile" ? styles.bottomNavItemActive : ""}`}
+          >
+            {icons.profile}
+            <span className={styles.bottomNavLabel}>Profilo</span>
+          </Link>
+        </div>
       </nav>
     </>
   );

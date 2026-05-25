@@ -2,18 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  ArcElement,
   Tooltip,
-  ResponsiveContainer,
   Legend,
-} from "recharts";
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+} from "chart.js";
+import { Pie, Bar } from "react-chartjs-2";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -44,6 +42,8 @@ interface Goal {
   month: number;
   year: number;
 }
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const months = [
   { value: 1, label: "Gennaio" },
@@ -287,29 +287,32 @@ export default function StatisticsPage() {
           <h3 className={styles.chartTitle}>Spese per Categoria</h3>
           <div className={styles.chartContainer}>
             {categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
-                    }
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => formatCurrency(value as number)}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <Pie
+                data={{
+                  labels: categoryData.map((d) => d.name),
+                  datasets: [{
+                    data: categoryData.map((d) => d.value),
+                    backgroundColor: categoryData.map((d) => d.color),
+                    borderColor: categoryData.map((d) => d.color),
+                    borderWidth: 1,
+                  }],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: "bottom",
+                      labels: { color: "#9B9BA8", font: { size: 12 }, padding: 16 },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (ctx) => ` ${formatCurrency(ctx.parsed)}`,
+                      },
+                    },
+                  },
+                }}
+              />
             ) : (
               <div className={styles.emptyState}>
                 <p className={styles.emptyText}>Nessun dato disponibile</p>
@@ -322,19 +325,56 @@ export default function StatisticsPage() {
           <h3 className={styles.chartTitle}>Spese vs Entrate Settimanali</h3>
           <div className={styles.chartContainer}>
             {weeklyData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="week" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value) => formatCurrency(value as number)}
-                  />
-                  <Legend />
-                  <Bar dataKey="spese" fill="#ef4444" name="Spese" />
-                  <Bar dataKey="entrate" fill="#22c55e" name="Entrate" />
-                </BarChart>
-              </ResponsiveContainer>
+              <Bar
+                data={{
+                  labels: weeklyData.map((d) => d.week),
+                  datasets: [
+                    {
+                      label: "Spese",
+                      data: weeklyData.map((d) => d.spese),
+                      backgroundColor: "rgba(255, 107, 107, 0.7)",
+                      borderColor: "#FF6B6B",
+                      borderWidth: 1,
+                      borderRadius: 6,
+                    },
+                    {
+                      label: "Entrate",
+                      data: weeklyData.map((d) => d.entrate),
+                      backgroundColor: "rgba(61, 220, 151, 0.7)",
+                      borderColor: "#3DDC97",
+                      borderWidth: 1,
+                      borderRadius: 6,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      labels: { color: "#9B9BA8", font: { size: 12 } },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y ?? 0)}`,
+                      },
+                    },
+                  },
+                  scales: {
+                    x: {
+                      ticks: { color: "#9B9BA8" },
+                      grid: { color: "rgba(255,255,255,0.04)" },
+                    },
+                    y: {
+                      ticks: {
+                        color: "#9B9BA8",
+                        callback: (value) => formatCurrency(value as number),
+                      },
+                      grid: { color: "rgba(255,255,255,0.04)" },
+                    },
+                  },
+                }}
+              />
             ) : (
               <div className={styles.emptyState}>
                 <p className={styles.emptyText}>Nessun dato disponibile</p>
