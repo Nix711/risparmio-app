@@ -1,36 +1,37 @@
 .card {
-  background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--surface);
+  border-radius: 22px;
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
 .cardHeader {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .cardTitle {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text);
+  letter-spacing: -0.2px;
 }
 
 .cardDescription {
   margin: 0.25rem 0 0;
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.8125rem;
+  color: var(--text-dim);
 }
 
 .cardContent {
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 .cardFooter {
-  padding: 1rem 1.5rem;
-  background-color: #f9fafb;
-  border-top: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  background-color: var(--surface-up);
+  border-top: 1px solid var(--border);
 }
 
 .noPadding {
