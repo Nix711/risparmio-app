@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "encrypt-existing": "npx tsx scripts/encrypt-descriptions.ts"
+    "encrypt-existing": "npx tsx scripts/encrypt-descriptions.ts",
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -21,9 +22,6 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.3",
     "zod": "^4.3.6"
-  },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
