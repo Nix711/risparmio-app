@@ -390,41 +390,20 @@ function ExpensesPageContent() {
       )}
 
       <div className={styles.summary}>
-        {selectedType === "" ? (
-          <>
-            <div>
-              <p className={styles.summaryLabel}>Spese</p>
-              <p className={styles.summaryValue}>{formatCurrency(totalExpenses)}</p>
-            </div>
-            <div>
-              <p className={styles.summaryLabel}>Entrate</p>
-              <p className={styles.summaryValuePositive}>{formatCurrency(totalIncome)}</p>
-            </div>
-            <div>
-              <p className={styles.summaryLabel}>Bilancio</p>
-              <p className={netBalance >= 0 ? styles.summaryValuePositive : styles.summaryValue}>
-                {netBalance >= 0 ? "+" : ""}{formatCurrency(netBalance)}
-              </p>
-            </div>
-            <p className={styles.summaryCount}>{expenses.length} transazioni</p>
-          </>
-        ) : selectedType === "expense" ? (
-          <>
-            <div>
-              <p className={styles.summaryLabel}>Totale Spese</p>
-              <p className={styles.summaryValue}>{formatCurrency(totalExpenses)}</p>
-            </div>
-            <p className={styles.summaryCount}>{expenses.length} spese</p>
-          </>
-        ) : (
-          <>
-            <div>
-              <p className={styles.summaryLabel}>Totale Entrate</p>
-              <p className={styles.summaryValuePositive}>{formatCurrency(totalIncome)}</p>
-            </div>
-            <p className={styles.summaryCount}>{expenses.length} entrate</p>
-          </>
-        )}
+        <div className={`${styles.summaryPill} ${selectedType === "expense" ? styles.summaryPillActive : ""}`}>
+          <p className={styles.summaryLabel}>Spese</p>
+          <p className={styles.summaryValueExpense}>{formatCurrency(totalExpenses)}</p>
+        </div>
+        <div className={`${styles.summaryPill} ${selectedType === "income" ? styles.summaryPillActive : ""}`}>
+          <p className={styles.summaryLabel}>Entrate</p>
+          <p className={styles.summaryValueIncome}>{formatCurrency(totalIncome)}</p>
+        </div>
+        <div className={`${styles.summaryPill} ${selectedType === "" ? styles.summaryPillActive : ""}`}>
+          <p className={styles.summaryLabel}>Bilancio</p>
+          <p className={netBalance >= 0 ? styles.summaryValueIncome : styles.summaryValueExpense}>
+            {netBalance >= 0 ? "+" : "\u2212"}{formatCurrency(Math.abs(netBalance))}
+          </p>
+        </div>
       </div>
 
       {loading ? (
@@ -436,7 +415,7 @@ function ExpensesPageContent() {
               <div className={styles.expenseInfo}>
                 <div
                   className={styles.expenseIcon}
-                  style={{ backgroundColor: expense.category.color + "20" }}
+                  style={{ backgroundColor: expense.category.color + "33", borderColor: expense.category.color + "55" }}
                 >
                   {expense.category.icon || "📦"}
                 </div>
@@ -494,6 +473,7 @@ function ExpensesPageContent() {
             className={styles.modalContent}
             onClick={(e) => e.stopPropagation()}
           >
+            <div className={styles.modalGrabber} />
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>
                 {editingExpense ? "Modifica Transazione" : "Nuova Transazione"}
