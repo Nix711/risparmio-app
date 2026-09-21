@@ -47,7 +47,7 @@ async function getDashboardData(userId: string) {
   const [
     expenses,
     incomes,
-    goals,
+    savingGoals,
     previousMonthExpenses,
     previousMonthIncomes,
     trendIncomeRaw,
@@ -63,8 +63,10 @@ async function getDashboardData(userId: string) {
       include: { category: true },
       orderBy: { date: "desc" },
     }),
-    prisma.goal.findMany({
-      where: { userId, month: start.getMonth() + 1, year: start.getFullYear() },
+    prisma.savingGoal.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 3,
     }),
     prisma.expense.aggregate({
       where: {
@@ -98,8 +100,8 @@ async function getDashboardData(userId: string) {
     }),
   ]);
 
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const totalIncome = incomes.reduce((s, e) => s + e.amount, 0);
+  const totalExpenses = expenses.reduce((s: number, e: { amount: number }) => s + e.amount, 0);
+  const totalIncome = incomes.reduce((s: number, e: { amount: number }) => s + e.amount, 0);
   const netBalance = totalIncome - totalExpenses;
 
   const prevExp = previousMonthExpenses._sum.amount ?? 0;
@@ -134,17 +136,17 @@ async function getDashboardData(userId: string) {
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     const label = new Intl.DateTimeFormat("it-IT", { month: "short" }).format(d);
     const income = trendIncomeRaw
-      .filter((e) => {
+      .filter((e: { amount: number; date: Date }) => {
         const ed = new Date(e.date);
         return `${ed.getFullYear()}-${ed.getMonth()}` === key;
       })
-      .reduce((s, e) => s + e.amount, 0);
+      .reduce((s: number, e: { amount: number }) => s + e.amount, 0);
     const expense = trendExpenseRaw
-      .filter((e) => {
+      .filter((e: { amount: number; date: Date }) => {
         const ed = new Date(e.date);
         return `${ed.getFullYear()}-${ed.getMonth()}` === key;
       })
-      .reduce((s, e) => s + e.amount, 0);
+      .reduce((s: number, e: { amount: number }) => s + e.amount, 0);
     return { label, income, expense };
   });
 
@@ -158,7 +160,7 @@ async function getDashboardData(userId: string) {
     netBalance,
     expenseChangePct,
     incomeChangePct,
-    goals,
+    savingGoals,
     recentTransactions: allTransactions,
     topCategories,
     trendData,
@@ -317,38 +319,59 @@ export default async function DashboardPage() {
       )}
 
       {/* ── Obiettivi attivi ── */}
-      {data.goals.length > 0 && (
+      {data.savingGoals.length > 0 && (
         <div className={styles.goalsSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionEyebrow}>OBIETTIVI ATTIVI</span>
-            <Link href="/statistics" className={styles.cardAction}>Gestisci</Link>
+            <Link href="/goals" className={styles.cardAction}>Vedi tutti</Link>
           </div>
           <div className={styles.goalsCarousel}>
-            {data.goals.map((goal) => {
-              const progress =
-                goal.type === "saving"
-                  ? (goal.currentAmount / goal.targetAmount) * 100
-                  : (data.totalExpenses / goal.targetAmount) * 100;
-              const clamped = Math.min(progress, 100);
-              const isOver = goal.type === "limit" && progress > 100;
-              const fillColor = isOver ? "var(--expense)" : clamped > 80 ? "var(--warn)" : "var(--goal)";
+            {data.savingGoals.map((goal: {
+              id: string;
+              name: string;
+              emoji: string;
+              saved: number;
+              target: number;
+              due: string;
+              accent: string;
+            }) => {
+              const progress = goal.target > 0
+                ? Math.min(100, (goal.saved / goal.target) * 100)
+                : 0;
+              const isComplete = goal.saved >= goal.target;
+              const dueLabel = (() => {
+                try {
+                  return new Intl.DateTimeFormat("it-IT", { month: "short", year: "numeric" }).format(new Date(goal.due));
+                } catch { return goal.due; }
+              })();
               return (
-                <div key={goal.id} className={styles.goalCard}>
-                  <div className={styles.goalIcon}>
-                    {goal.type === "saving" ? "🎯" : "💸"}
+                <Link key={goal.id} href={`/goals/${goal.id}`} className={styles.goalCard}>
+                  <div
+                    className={styles.goalIcon}
+                    style={{
+                      background: goal.accent + "38",
+                      border: `1px solid ${goal.accent}55`,
+                    }}
+                  >
+                    {goal.emoji}
                   </div>
                   <p className={styles.goalName}>{goal.name}</p>
-                  <p className={styles.goalAmount}>{formatCurrency(goal.targetAmount)}</p>
+                  <p className={styles.goalDue}>{dueLabel}</p>
+                  <p className={styles.goalSaved}>{formatCurrency(goal.saved)}</p>
+                  <p className={styles.goalOf}>di {formatCurrency(goal.target)}</p>
                   <div className={styles.goalTrack}>
                     <div
                       className={styles.goalFill}
-                      style={{ width: `${clamped}%`, background: fillColor }}
+                      style={{
+                        width: `${progress}%`,
+                        background: isComplete ? "var(--income)" : `linear-gradient(90deg, ${goal.accent}, ${goal.accent}CC)`,
+                      }}
                     />
                   </div>
-                  <p className={styles.goalPct} style={{ color: fillColor }}>
-                    {Math.round(clamped)}%
+                  <p className={styles.goalPct} style={{ color: isComplete ? "var(--income)" : goal.accent }}>
+                    {isComplete ? "✓" : `${Math.round(progress)}%`}
                   </p>
-                </div>
+                </Link>
               );
             })}
           </div>

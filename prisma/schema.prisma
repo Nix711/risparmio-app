@@ -16,10 +16,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  categories Category[]
-  expenses   Expense[]
-  goals      Goal[]
-  budgets    Budget[]
+  categories  Category[]
+  expenses    Expense[]
+  goals       Goal[]
+  budgets     Budget[]
+  savingGoals SavingGoal[]
 }
 
 model Category {
@@ -68,6 +69,38 @@ model Goal {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, name, month, year])
+}
+
+model SavingGoal {
+  id        String   @id @default(cuid())
+  name      String
+  emoji     String   @default("🎯")
+  saved     Float    @default(0)
+  target    Float
+  due       String   // ISO date string "2026-09-01"
+  accent    String   @default("#A78BFA")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  contributions GoalContribution[]
+
+  @@index([userId, createdAt])
+}
+
+model GoalContribution {
+  id        String   @id @default(cuid())
+  amount    Float
+  date      String   // ISO date "2026-05-25"
+  note      String?
+  createdAt DateTime @default(now())
+
+  goalId String
+  goal   SavingGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
 }
 
 model Budget {
