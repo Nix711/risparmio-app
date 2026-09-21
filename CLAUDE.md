@@ -95,6 +95,7 @@ Le credenziali vengono salvate automaticamente nel keychain macOS dopo il primo 
 ## Pattern da rispettare
 - Usare `$extends` di Prisma v6, mai `$use`
 - Riavviare il dev server dopo modifiche a `lib/prisma.ts`
+- `prisma.config.ts` carica `.env` esplicitamente: con quel file presente la CLI di Prisma non lo fa più da sola e i comandi `prisma` fallirebbero con `P1012`
 - Le variabili senza prefisso `NEXT_PUBLIC_` sono server-side only (corretto per `ENCRYPTION_KEY`)
 - I campi `amount` non sono cifrati per preservare aggregazioni/filtri nel DB
 - Modali come bottom sheet con animazione `slideUp` e `backdrop-filter: blur`
