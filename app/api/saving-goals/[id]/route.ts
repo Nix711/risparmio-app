@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { serializeMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { updateSavingGoalSchema } from "@/lib/validations/savingGoal";
 
@@ -28,7 +29,7 @@ export async function GET(
       return NextResponse.json({ error: "Obiettivo non trovato" }, { status: 404 });
     }
 
-    return NextResponse.json(goal);
+    return NextResponse.json(serializeMoney(goal));
   } catch {
     return NextResponse.json(
       { error: "Errore nel recupero dell'obiettivo" },
@@ -73,7 +74,7 @@ export async function PUT(
       include: { contributions: { orderBy: { createdAt: "desc" } } },
     });
 
-    return NextResponse.json(goal);
+    return NextResponse.json(serializeMoney(goal));
   } catch {
     return NextResponse.json(
       { error: "Errore nell'aggiornamento dell'obiettivo" },

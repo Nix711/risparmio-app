@@ -1,5 +1,7 @@
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { changePercent, serializeMoney, sumMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { getCurrentMonthRange } from "@/lib/utils/date";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
@@ -100,33 +102,39 @@ async function getDashboardData(userId: string) {
     }),
   ]);
 
-  const totalExpenses = expenses.reduce((s: number, e: { amount: number }) => s + e.amount, 0);
-  const totalIncome = incomes.reduce((s: number, e: { amount: number }) => s + e.amount, 0);
-  const netBalance = totalIncome - totalExpenses;
+  const totalExpenses = sumMoney(expenses.map((e) => e.amount));
+  const totalIncome = sumMoney(incomes.map((e) => e.amount));
+  const netBalance = totalIncome.minus(totalExpenses);
 
-  const prevExp = previousMonthExpenses._sum.amount ?? 0;
-  const prevInc = previousMonthIncomes._sum.amount ?? 0;
-  const expenseChangePct = prevExp > 0 ? ((totalExpenses - prevExp) / prevExp) * 100 : 0;
-  const incomeChangePct = prevInc > 0 ? ((totalIncome - prevInc) / prevInc) * 100 : 0;
+  const prevExp = previousMonthExpenses._sum.amount ?? new Prisma.Decimal(0);
+  const prevInc = previousMonthIncomes._sum.amount ?? new Prisma.Decimal(0);
+  const expenseChangePct = changePercent(totalExpenses, prevExp);
+  const incomeChangePct = changePercent(totalIncome, prevInc);
 
   // Top categories (expense only)
-  const catTotals: Record<string, { amount: number; icon: string; color: string }> = {};
+  const catTotals: Record<string, { amount: Prisma.Decimal; icon: string; color: string }> = {};
   for (const e of expenses) {
     const key = e.category.name;
     if (!catTotals[key]) {
-      catTotals[key] = { amount: 0, icon: e.category.icon || "📦", color: e.category.color || "#7B61FF" };
+      catTotals[key] = {
+        amount: new Prisma.Decimal(0),
+        icon: e.category.icon || "📦",
+        color: e.category.color || "#7B61FF",
+      };
     }
-    catTotals[key].amount += e.amount;
+    catTotals[key].amount = catTotals[key].amount.plus(e.amount);
   }
   const topCategories = Object.entries(catTotals)
-    .sort(([, a], [, b]) => b.amount - a.amount)
+    .sort(([, a], [, b]) => b.amount.comparedTo(a.amount))
     .slice(0, 4)
     .map(([name, d]) => ({
       name,
-      amount: d.amount,
+      amount: d.amount.toNumber(),
       icon: d.icon,
       color: d.color,
-      percent: totalExpenses > 0 ? (d.amount / totalExpenses) * 100 : 0,
+      percent: totalExpenses.isZero()
+        ? 0
+        : d.amount.dividedBy(totalExpenses).times(100).toNumber(),
     }));
 
   // 6-month trend data
@@ -135,18 +143,12 @@ async function getDashboardData(userId: string) {
     d.setMonth(d.getMonth() - (5 - i));
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     const label = new Intl.DateTimeFormat("it-IT", { month: "short" }).format(d);
-    const income = trendIncomeRaw
-      .filter((e: { amount: number; date: Date }) => {
-        const ed = new Date(e.date);
-        return `${ed.getFullYear()}-${ed.getMonth()}` === key;
-      })
-      .reduce((s: number, e: { amount: number }) => s + e.amount, 0);
-    const expense = trendExpenseRaw
-      .filter((e: { amount: number; date: Date }) => {
-        const ed = new Date(e.date);
-        return `${ed.getFullYear()}-${ed.getMonth()}` === key;
-      })
-      .reduce((s: number, e: { amount: number }) => s + e.amount, 0);
+    const inMonth = (e: { date: Date }) => {
+      const ed = new Date(e.date);
+      return `${ed.getFullYear()}-${ed.getMonth()}` === key;
+    };
+    const income = sumMoney(trendIncomeRaw.filter(inMonth).map((e) => e.amount)).toNumber();
+    const expense = sumMoney(trendExpenseRaw.filter(inMonth).map((e) => e.amount)).toNumber();
     return { label, income, expense };
   });
 
@@ -155,13 +157,13 @@ async function getDashboardData(userId: string) {
     .slice(0, 5);
 
   return {
-    totalExpenses,
-    totalIncome,
-    netBalance,
+    totalExpenses: totalExpenses.toNumber(),
+    totalIncome: totalIncome.toNumber(),
+    netBalance: netBalance.toNumber(),
     expenseChangePct,
     incomeChangePct,
-    savingGoals,
-    recentTransactions: allTransactions,
+    savingGoals: serializeMoney(savingGoals),
+    recentTransactions: serializeMoney(allTransactions),
     topCategories,
     trendData,
   };

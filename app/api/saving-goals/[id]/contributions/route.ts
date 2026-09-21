@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { serializeMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { addContributionSchema } from "@/lib/validations/savingGoal";
 
@@ -28,7 +29,7 @@ export async function GET(
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(contributions);
+    return NextResponse.json(serializeMoney(contributions));
   } catch {
     return NextResponse.json(
       { error: "Errore nel recupero dei contributi" },
@@ -82,7 +83,7 @@ export async function POST(
       return { contribution, goal: updatedGoal };
     });
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(serializeMoney(result), { status: 201 });
   } catch {
     return NextResponse.json(
       { error: "Errore nell'aggiunta del contributo" },

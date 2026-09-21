@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { serializeMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { updateExpenseSchema } from "@/lib/validations/expense";
 
@@ -47,7 +48,7 @@ export async function PUT(
       include: { category: true },
     });
 
-    return NextResponse.json(expense);
+    return NextResponse.json(serializeMoney(expense));
   } catch {
     return NextResponse.json(
       { error: "Errore nell'aggiornamento della spesa" },
