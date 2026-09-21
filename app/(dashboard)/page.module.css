@@ -351,20 +351,27 @@
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 160ms, border-color 160ms;
+}
+
+.goalCard:hover {
+  background: var(--surface-up);
+  border-color: var(--border-strong);
 }
 
 .goalIcon {
-  font-size: 24px;
+  font-size: 20px;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(167, 139, 250, 0.15);
-  border: 1px solid rgba(167, 139, 250, 0.25);
   border-radius: 10px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .goalName {
@@ -377,16 +384,33 @@
   text-overflow: ellipsis;
 }
 
-.goalAmount {
+.goalDue {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+}
+
+.goalSaved {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+
+.goalOf {
   font-size: 11.5px;
   color: var(--text-muted);
   font-weight: 500;
-  margin: 0;
+  margin: 0 0 4px;
   font-variant-numeric: tabular-nums;
 }
 
 .goalTrack {
-  height: 4px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 999px;
   overflow: hidden;
@@ -401,8 +425,9 @@
 
 .goalPct {
   font-size: 12px;
-  font-weight: 600;
-  margin: 0;
+  font-weight: 700;
+  margin: 2px 0 0;
+  align-self: flex-end;
 }
 
 /* ── Transactions ─────────────────────────────────────────────────────────── */
