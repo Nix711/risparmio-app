@@ -10,4 +10,8 @@ if (existsSync(".env")) {
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
+  migrations: {
+    // Eseguito da `prisma db seed` e in automatico da `prisma migrate reset`
+    seed: "tsx prisma/seed.ts",
+  },
 });

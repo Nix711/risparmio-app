@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "encrypt-existing": "npx tsx scripts/encrypt-descriptions.ts",
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "prisma db seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
