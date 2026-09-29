@@ -24,11 +24,16 @@
 
 ## Branch & Deploy
 ```
-dev  →  staging  →  main
+branch di lavoro  →  dev  →  staging  →  main
 ```
-- **dev**: sviluppo locale, nessun deploy automatico
-- **staging**: deploy automatico su Vercel (branch di preview)
-- **main**: deploy automatico su Vercel (produzione)
+- **branch di lavoro** (`fix/…`, `refactor/…`, `chore/…`, `docs/…`): uno per intervento, unito in `dev` con una pull request
+- **dev**: integrazione, nessun deploy
+- **staging**: deploy di anteprima su Vercel, dove si provano le modifiche prima della produzione
+- **main**: deploy automatico su Vercel (produzione). Si aggiorna solo con una pull request da `staging`, mai con push diretto
+- Solo `main` e `staging` vengono pubblicati: lo stabilisce `git.deploymentEnabled` in `vercel.json`, perché di default Vercel pubblicherebbe ogni branch
+- Merge con **Create a merge commit**, non squash, per tenere leggibili i singoli commit
+
+> ⚠️ `staging` usa le variabili dell'ambiente Preview di Vercel: controllare a quale database punta `DATABASE_URL` prima di inserire dati di prova.
 
 ### Vercel — variabili d'ambiente richieste
 | Variabile | Note |
