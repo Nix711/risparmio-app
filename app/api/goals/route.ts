@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { serializeMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { createGoalSchema } from "@/lib/validations/goal";
 
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(goals);
+    return NextResponse.json(serializeMoney(goals));
   } catch {
     return NextResponse.json(
       { error: "Errore nel recupero dei goal" },
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(goal, { status: 201 });
+    return NextResponse.json(serializeMoney(goal), { status: 201 });
   } catch {
     return NextResponse.json(
       { error: "Errore nella creazione del goal" },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { serializeMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { updateGoalSchema } from "@/lib/validations/goal";
 
@@ -38,7 +39,7 @@ export async function PUT(
       data: validated.data,
     });
 
-    return NextResponse.json(goal);
+    return NextResponse.json(serializeMoney(goal));
   } catch {
     return NextResponse.json(
       { error: "Errore nell'aggiornamento del goal" },
