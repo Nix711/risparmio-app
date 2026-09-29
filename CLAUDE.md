@@ -28,12 +28,18 @@ branch di lavoro  →  dev  →  staging  →  main
 ```
 - **branch di lavoro** (`fix/…`, `refactor/…`, `chore/…`, `docs/…`): uno per intervento, unito in `dev` con una pull request
 - **dev**: integrazione, nessun deploy
-- **staging**: deploy di anteprima su Vercel, dove si provano le modifiche prima della produzione
+- **staging**: branch di rilascio, contiene esattamente ciò che andrà in produzione; nessun deploy
 - **main**: deploy automatico su Vercel (produzione). Si aggiorna solo con una pull request da `staging`, mai con push diretto
-- Solo `main` e `staging` vengono pubblicati: lo stabilisce `git.deploymentEnabled` in `vercel.json`, perché di default Vercel pubblicherebbe ogni branch
+- Solo `main` viene pubblicato: lo stabilisce `git.deploymentEnabled` in `vercel.json`, perché di default Vercel pubblicherebbe ogni branch
 - Merge con **Create a merge commit**, non squash, per tenere leggibili i singoli commit
 
-> ⚠️ `staging` usa le variabili dell'ambiente Preview di Vercel: controllare a quale database punta `DATABASE_URL` prima di inserire dati di prova.
+### Dopo ogni rilascio
+Riportare `dev` e `staging` su `main` con un fast-forward:
+```bash
+git fetch
+git push origin origin/main:dev origin/main:staging
+```
+Ogni PR unita con un merge commit crea un commit che esiste solo sul branch di arrivo: senza questo passo `dev` risulta indietro rispetto a `main` pur avendo lo stesso codice. Una PR `main → dev` non risolve, perché crea un altro merge commit. Se `dev` ha commit che `main` non ha, git rifiuta il push invece di perderli.
 
 ### Vercel — variabili d'ambiente richieste
 | Variabile | Note |
