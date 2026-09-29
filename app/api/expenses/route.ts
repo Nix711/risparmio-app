@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { serializeMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { createExpenseSchema } from "@/lib/validations/expense";
 
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
       orderBy: { date: "desc" },
     });
 
-    return NextResponse.json(expenses);
+    return NextResponse.json(serializeMoney(expenses));
   } catch (error) {
     console.error("Errore expenses GET:", error);
     return NextResponse.json(
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
       include: { category: true },
     });
 
-    return NextResponse.json(expense, { status: 201 });
+    return NextResponse.json(serializeMoney(expense), { status: 201 });
   } catch {
     return NextResponse.json(
       { error: "Errore nella creazione della transazione" },

@@ -16,10 +16,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  categories Category[]
-  expenses   Expense[]
-  goals      Goal[]
-  budgets    Budget[]
+  categories  Category[]
+  expenses    Expense[]
+  goals       Goal[]
+  budgets     Budget[]
+  savingGoals SavingGoal[]
 }
 
 model Category {
@@ -39,7 +40,7 @@ model Category {
 
 model Expense {
   id          String   @id @default(cuid())
-  amount      Float
+  amount      Decimal  @db.Decimal(12, 2)
   description String?
   date        DateTime
   type        String   @default("expense") // "expense" | "income"
@@ -56,10 +57,10 @@ model Expense {
 }
 
 model Goal {
-  id            String @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String
-  targetAmount  Float
-  currentAmount Float  @default(0)
+  targetAmount  Decimal @db.Decimal(12, 2)
+  currentAmount Decimal @default(0) @db.Decimal(12, 2)
   type          String // "saving" = risparmio, "limit" = spesa massima
   month         Int
   year          Int
@@ -70,9 +71,41 @@ model Goal {
   @@unique([userId, name, month, year])
 }
 
+model SavingGoal {
+  id        String   @id @default(cuid())
+  name      String
+  emoji     String   @default("🎯")
+  saved     Decimal  @default(0) @db.Decimal(12, 2)
+  target    Decimal  @db.Decimal(12, 2)
+  due       String // ISO date string "2026-09-01"
+  accent    String   @default("#A78BFA")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  contributions GoalContribution[]
+
+  @@index([userId, createdAt])
+}
+
+model GoalContribution {
+  id        String   @id @default(cuid())
+  amount    Decimal  @db.Decimal(12, 2)
+  date      String // ISO date "2026-05-25"
+  note      String?
+  createdAt DateTime @default(now())
+
+  goalId String
+  goal   SavingGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
 model Budget {
-  id     String @id @default(cuid())
-  amount Float
+  id     String  @id @default(cuid())
+  amount Decimal @db.Decimal(12, 2)
   month  Int
   year   Int
 

@@ -25,6 +25,13 @@ const icons = {
       <line x1="1" y1="10" x2="23" y2="10" />
     </svg>
   ),
+  goals: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
   statistics: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="20" x2="18" y2="10" />
@@ -49,6 +56,7 @@ const icons = {
 const navItems = [
   { href: "/", icon: icons.dashboard, label: "Home" },
   { href: "/expenses", icon: icons.expenses, label: "Trans." },
+  { href: "/goals", icon: icons.goals, label: "Obiettivi" },
   { href: "/statistics", icon: icons.statistics, label: "Stats" },
   { href: "/profile", icon: icons.profile, label: "Profilo" },
 ];
@@ -139,11 +147,11 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
 
           <Link
-            href="/statistics"
-            className={`${styles.bottomNavItem} ${pathname === "/statistics" ? styles.bottomNavItemActive : ""}`}
+            href="/goals"
+            className={`${styles.bottomNavItem} ${pathname === "/goals" || pathname.startsWith("/goals/") ? styles.bottomNavItemActive : ""}`}
           >
-            {icons.statistics}
-            <span className={styles.bottomNavLabel}>Stats</span>
+            {icons.goals}
+            <span className={styles.bottomNavLabel}>Obiettivi</span>
           </Link>
 
           <Link

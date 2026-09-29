@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { positiveAmount } from "./money";
 
 export const transactionTypeSchema = z.enum(["expense", "income"]);
 
 export const createExpenseSchema = z.object({
-  amount: z.number().positive("L'importo deve essere positivo"),
+  amount: positiveAmount(),
   description: z.string().optional(),
   categoryId: z.string().min(1, "Seleziona una categoria"),
   date: z.string().or(z.date()),
