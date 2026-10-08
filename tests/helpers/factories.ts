@@ -17,3 +17,15 @@ export function createUser() {
 export function createCategory(data: { name: string; userId?: string; isDefault?: boolean }) {
   return prisma.category.create({ data });
 }
+
+/** Passa dal client di lib/prisma.ts, quindi la descrizione viene cifrata come in produzione. */
+export function createExpense(data: {
+  userId: string;
+  categoryId: string;
+  amount: string;
+  date: string;
+  type?: "expense" | "income";
+  description?: string;
+}) {
+  return prisma.expense.create({ data: { ...data, date: new Date(data.date) } });
+}
