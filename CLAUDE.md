@@ -2,7 +2,7 @@
 
 ## Stack
 - **Framework**: Next.js 16.1.1 (App Router)
-- **Database**: PostgreSQL on Neon (connection pooler)
+- **Database**: PostgreSQL — Neon in produzione (connection pooler), Docker in locale
 - **ORM**: Prisma 6.19.1 — usa `$extends` per le query extensions, NON `$use` (rimosso in v6)
 - **Auth**: NextAuth v5 beta — JWT strategy, credentials provider
 - **Styling**: CSS Modules (`.module.css`) per ogni componente/pagina
@@ -19,6 +19,25 @@
 | `app/(dashboard)/statistics/` | Client Component | Usa API routes |
 | `app/(dashboard)/profile/` | Client Component | Usa API routes |
 | `app/(auth)/login/` | Client Component | NextAuth signIn |
+
+---
+
+## Sviluppo in locale
+Il database di sviluppo è un Postgres 17 in Docker (`docker-compose.yml`), mai Neon: in locale non si lavora sui dati di produzione.
+
+```bash
+cp .env.example .env    # poi genera AUTH_SECRET ed ENCRYPTION_KEY con: openssl rand -base64 32
+npm install
+npm run db:up           # avvia Postgres e torna quando il healthcheck è verde
+npm run db:reset        # applica le migration e lancia il seed (chiede conferma)
+npm run dev             # http://localhost:3000
+```
+
+Accesso con l'utente demo: `demo@balancebook.local` / `demo1234`.
+
+- `npm run db:down` ferma il container; i dati restano nel volume `db-data`
+- `npm run seed` crea le categorie predefinite; utente e movimenti demo solo se `DATABASE_URL` punta a localhost (guardia in `prisma/seed.ts`)
+- In `DATABASE_URL` usare `127.0.0.1`, non `localhost`: la porta è pubblicata solo su IPv4 e `localhost` può risolversi in `::1`
 
 ---
 
@@ -64,17 +83,15 @@ Ogni PR unita con un merge commit crea un commit che esiste solo sul branch di a
 
 ## Comandi utili
 ```bash
-# Dev server locale
-npm run dev
-
 # Dev server accessibile da altri dispositivi sulla stessa rete
 npm run dev -- --hostname 0.0.0.0
-# poi accedi da http://$(ipconfig getifaddr en0):3000
+# poi accedi da http://<IP della macchina>:3000
 
 # Prisma
-npx prisma studio          # GUI database
-npx prisma db push         # Sync schema → DB
-npx prisma generate        # Rigenera client
+npx prisma migrate dev --name <nome>   # Modifica allo schema → nuova migration, applicata in locale
+npx prisma migrate status              # Database a cui si è connessi e migration da applicare
+npx prisma studio                      # GUI database
+npx prisma generate                    # Rigenera client
 
 # Build
 npm run build
@@ -83,28 +100,9 @@ npm run start
 
 ---
 
-## Git — credenziali GitHub per questo repo
-Per impostare un account GitHub specifico per questo progetto (HTTPS):
-
-```bash
-# 1. Imposta username nell'URL remote
-git remote set-url origin https://TUO_USERNAME@github.com/OWNER/risparmio.git
-
-# 2. Verifica
-git remote -v
-
-# 3. Al prossimo push inserisci:
-#    Username: GitHub username
-#    Password: Personal Access Token (NON la password GitHub)
-#    → GitHub → Settings → Developer settings → Personal access tokens → repo scope
-```
-
-Le credenziali vengono salvate automaticamente nel keychain macOS dopo il primo push.
-
----
-
 ## Pattern da rispettare
 - Usare `$extends` di Prisma v6, mai `$use`
+- Ogni modifica allo schema passa da una migration (`prisma migrate dev`), mai da `prisma db push`: senza migration la modifica non si può riprodurre su un altro database
 - Riavviare il dev server dopo modifiche a `lib/prisma.ts`
 - `prisma.config.ts` carica `.env` esplicitamente: con quel file presente la CLI di Prisma non lo fa più da sola e i comandi `prisma` fallirebbero con `P1012`
 - Le variabili senza prefisso `NEXT_PUBLIC_` sono server-side only (corretto per `ENCRYPTION_KEY`)
