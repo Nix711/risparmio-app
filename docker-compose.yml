@@ -1,0 +1,26 @@
+# PostgreSQL per lo sviluppo locale.
+# Avvio: docker compose up -d --wait — Stop: docker compose down (i dati restano nel volume)
+# Le credenziali valgono solo in locale: il database è raggiungibile unicamente da questa macchina.
+name: balancebook
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: balancebook
+      POSTGRES_PASSWORD: balancebook
+      POSTGRES_DB: balancebook
+    ports:
+      # Solo 127.0.0.1: di default Docker pubblica la porta su tutte le interfacce, scavalcando il firewall
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # Serve a `docker compose up --wait` per tornare solo quando Postgres accetta connessioni
+      test: ["CMD-SHELL", "pg_isready -U balancebook -d balancebook"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
