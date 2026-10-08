@@ -7,6 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "encrypt-existing": "npx tsx scripts/encrypt-descriptions.ts",
     "seed": "prisma db seed",
     "db:up": "docker compose up -d --wait",
@@ -35,6 +37,7 @@
     "eslint-config-next": "16.1.1",
     "prisma": "^6.19.1",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.3"
   }
 }
