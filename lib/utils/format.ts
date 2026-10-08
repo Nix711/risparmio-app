@@ -24,7 +24,3 @@ export function formatDate(date: Date | string, format: "short" | "long" = "shor
     year: "numeric",
   }).format(d);
 }
-
-export function formatPercentage(value: number): string {
-  return `${Math.round(value)}%`;
-}
