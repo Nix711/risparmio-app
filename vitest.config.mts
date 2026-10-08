@@ -17,6 +17,13 @@ export default defineConfig({
     // Dopo ogni test ripristina le variabili cambiate con vi.stubEnv e le funzioni spiate con vi.spyOn
     unstubEnvs: true,
     restoreMocks: true,
+    coverage: {
+      provider: "v8",
+      include: ["lib/**/*.ts"],
+      reporter: ["text", "html"],
+      // npm run test:coverage fallisce se una delle quattro misure scende sotto la soglia
+      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
+    },
     projects: [
       {
         extends: true,
