@@ -8,6 +8,7 @@
 - **Styling**: CSS Modules (`.module.css`) per ogni componente/pagina
 - **Charts**: Chart.js + react-chartjs-2 (statistics page) + SVG server-side (dashboard trend)
 - **Font**: Inter via `next/font/google`
+- **Test**: Vitest 5 — unit e integrazione su Postgres, coverage con v8
 
 ---
 
@@ -41,11 +42,41 @@ Accesso con l'utente demo: `demo@balancebook.local` / `demo1234`.
 
 ---
 
+## Test
+Vitest con due progetti, configurati in `vitest.config.mts`:
+
+| Progetto | File | Cosa serve |
+|----------|------|------------|
+| `unit` | `lib/**/*.test.ts`, accanto al codice che testano | niente |
+| `integration` | `tests/**/*.test.ts` | Postgres acceso (`npm run db:up`) |
+
+```bash
+npm test                # tutti i test
+npm run test:unit       # solo unit, senza Docker
+npm run test:watch      # rilancia i test a ogni modifica
+npm run test:coverage   # coverage di lib/: fallisce se una misura scende sotto l'80%
+```
+
+**Test d'integrazione**
+- Chiamano i route handler direttamente; `jsonRequest()` e `routeContext()` in `tests/helpers/request.ts` ne costruiscono gli argomenti
+- La sessione è simulata con `vi.mock("@/lib/auth")` e si imposta con `signInAs(user)` / `signOut()` di `tests/helpers/session.ts`; validazione, Prisma, cifratura e database sono quelli veri
+- Usano il database `balancebook_test` nello stesso container: prima dei test `prisma migrate deploy` lo crea e lo porta all'ultima migration, prima di ogni test le tabelle vengono svuotate. I file girano uno alla volta
+- Una guardia ferma i test se la URL non punta a un database locale che finisce in `_test`
+- I dati si creano con `tests/helpers/factories.ts`; `storedDescription()` di `tests/helpers/raw.ts` legge la descrizione com'è nel database, senza l'estensione che la decifra
+
+**Ambiente**: Vitest non legge `.env`. La configurazione imposta una `ENCRYPTION_KEY` di prova e `TZ=UTC`, il fuso dei server di Vercel e di GitHub Actions.
+
+**Per ogni nuova route**: un test per il 401 senza sessione, il 400 con dati non validi, il 404 sulle risorse di un altro utente (che devono restare intatte) e il caso riuscito.
+
+**Bug noti**: sono test `it.fails`, che passano finché il bug esiste; `grep -rn "it.fails" lib tests` li elenca. Quando un bug viene corretto il test fallisce con "Expect test to fail" e va trasformato in un `it` normale. In un nuovo `it.fails` verificare l'effetto del bug (dati modificati, richiesta accettata), non uno status preciso: una correzione con uno status diverso resterebbe nascosta.
+
+---
+
 ## Branch & Deploy
 ```
 branch di lavoro  →  dev  →  staging  →  main
 ```
-- **branch di lavoro** (`fix/…`, `refactor/…`, `chore/…`, `docs/…`): uno per intervento, unito in `dev` con una pull request
+- **branch di lavoro** (`fix/…`, `refactor/…`, `test/…`, `chore/…`, `docs/…`): uno per intervento, unito in `dev` con una pull request
 - **dev**: integrazione, nessun deploy
 - **staging**: branch di rilascio, contiene esattamente ciò che andrà in produzione; nessun deploy
 - **main**: deploy automatico su Vercel (produzione). Si aggiorna solo con una pull request da `staging`, mai con push diretto
@@ -78,6 +109,7 @@ Ogni PR unita con un merge commit crea un commit che esiste solo sul branch di a
 - Utility in `lib/encryption.ts`
 - Backward compatible: `decrypt()` restituisce testo in chiaro se il formato non corrisponde
 - Script di migrazione dati esistenti: `npm run encrypt-existing`
+- ⚠️ L'estensione copre solo `create`, `update`, `upsert`, `findMany`, `findFirst` e `findUnique` sui movimenti. `createMany`, `updateMany`, le varianti `…AndReturn` e `…OrThrow` e le query annidate salvano la descrizione in chiaro o la restituiscono cifrata: non usarle sui movimenti finché non è corretta (`it.fails` in `tests/lib/prisma.test.ts`)
 
 ---
 
@@ -106,6 +138,8 @@ npm run start
 - Riavviare il dev server dopo modifiche a `lib/prisma.ts`
 - `prisma.config.ts` carica `.env` esplicitamente: con quel file presente la CLI di Prisma non lo fa più da sola e i comandi `prisma` fallirebbero con `P1012`
 - Le variabili senza prefisso `NEXT_PUBLIC_` sono server-side only (corretto per `ENCRYPTION_KEY`)
+- La verifica delle credenziali sta in `lib/credentials.ts`, non in `lib/auth.ts`: i test d'integrazione simulano `lib/auth`, quindi lì va solo la configurazione di NextAuth
+- `@types/node` segue la versione di Node usata su Vercel (24.x): aggiornarli insieme
 - I campi `amount` non sono cifrati per preservare aggregazioni/filtri nel DB
 - Modali come bottom sheet con animazione `slideUp` e `backdrop-filter: blur`
 - Importi negativi con `\u2212` (segno meno Unicode), non il trattino `-`
