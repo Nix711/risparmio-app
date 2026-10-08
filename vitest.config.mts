@@ -1,5 +1,8 @@
 import { defineConfig } from "vitest/config";
 
+// Stesso container Postgres dello sviluppo, ma un database separato: i dati demo restano intatti
+const TEST_DATABASE_URL = "postgresql://balancebook:balancebook@127.0.0.1:5432/balancebook_test";
+
 export default defineConfig({
   // Legge l'alias "@/" da tsconfig.json, così non va duplicato qui
   resolve: { tsconfigPaths: true },
@@ -20,6 +23,18 @@ export default defineConfig({
         test: {
           name: "unit",
           include: ["lib/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          include: ["tests/**/*.test.ts"],
+          env: { DATABASE_URL: TEST_DATABASE_URL },
+          globalSetup: ["tests/setup/global.ts"],
+          setupFiles: ["tests/setup/integration.ts"],
+          // I file condividono un database: in parallelo uno svuoterebbe le tabelle mentre un altro le usa
+          fileParallelism: false,
         },
       },
     ],
