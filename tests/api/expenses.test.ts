@@ -4,6 +4,7 @@ import { GET, POST } from "@/app/api/expenses/route";
 import { decrypt } from "@/lib/encryption";
 import { prisma } from "@/lib/prisma";
 import { createCategory, createExpense, createUser } from "../helpers/factories";
+import { storedDescription } from "../helpers/raw";
 import { jsonRequest, routeContext } from "../helpers/request";
 import { signInAs } from "../helpers/session";
 
@@ -24,14 +25,6 @@ async function seedTwoUsers() {
   ]);
   signInAs(me);
   return { me, other, myCategory, otherCategory };
-}
-
-/** La descrizione com'è salvata: $queryRaw non passa dall'estensione che la decifra. */
-async function storedDescription(id: string) {
-  const [row] = await prisma.$queryRaw<{ description: string }[]>`
-    SELECT description FROM "Expense" WHERE id = ${id}
-  `;
-  return row.description;
 }
 
 describe("GET /api/expenses", () => {
@@ -213,5 +206,38 @@ describe("DELETE /api/expenses/[id]", () => {
 
     expect(response.status).toBe(200);
     expect(await prisma.expense.count({ where: { id: mine.id } })).toBe(0);
+  });
+});
+
+describe("categoria di un movimento", () => {
+  it("accetta una categoria predefinita", async () => {
+    await seedTwoUsers();
+    const shared = await createCategory({ name: "Casa", isDefault: true });
+
+    const response = await POST(jsonRequest("POST", "/api/expenses", { amount: 10, categoryId: shared.id, date: "2026-10-08" }));
+
+    expect(response.status).toBe(201);
+  });
+
+  // BUG: categoryId non viene confrontato con l'utente della sessione. Il movimento prende
+  // la categoria di un altro utente, ne mostra il nome e gli impedisce di cancellarla.
+  it.fails("POST non accetta la categoria di un altro utente", async () => {
+    const { otherCategory } = await seedTwoUsers();
+
+    const response = await POST(jsonRequest("POST", "/api/expenses", { amount: 10, categoryId: otherCategory.id, date: "2026-10-08" }));
+
+    expect(response.ok).toBe(false);
+    expect(await prisma.expense.count()).toBe(0);
+  });
+
+  it.fails("PUT non sposta un movimento nella categoria di un altro utente", async () => {
+    const { me, myCategory, otherCategory } = await seedTwoUsers();
+    const mine = await createExpense({ userId: me.id, categoryId: myCategory.id, amount: "10.00", date: "2026-10-01" });
+
+    const response = await PUT(jsonRequest("PUT", `/api/expenses/${mine.id}`, { categoryId: otherCategory.id }), routeContext(mine.id));
+    const unchanged = await prisma.expense.findUnique({ where: { id: mine.id } });
+
+    expect(response.ok).toBe(false);
+    expect(unchanged?.categoryId).toBe(myCategory.id);
   });
 });

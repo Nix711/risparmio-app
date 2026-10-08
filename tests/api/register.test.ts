@@ -44,4 +44,15 @@ describe("POST /api/auth/register", () => {
     expect(await response.json()).toEqual({ error: "Email già registrata" });
     expect(await prisma.user.count({ where: { email: existing.email } })).toBe(1);
   });
+
+  // BUG: l'email è confrontata così com'è, quindi con una maiuscola diventa un secondo
+  // account. Lo stesso confronto, in lib/auth.ts, fa fallire il login con una maiuscola.
+  it.fails("non registra di nuovo un'email già usata, scritta con le maiuscole", async () => {
+    const existing = await createUser();
+
+    const response = await register({ ...body, email: existing.email.toUpperCase() });
+
+    expect(response.ok).toBe(false);
+    expect(await prisma.user.count({ where: { email: { equals: existing.email, mode: "insensitive" } } })).toBe(1);
+  });
 });
