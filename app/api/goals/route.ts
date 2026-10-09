@@ -1,92 +1,24 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authedRoute, parseBody } from "@/lib/api/route";
 import { serializeMoney } from "@/lib/money";
-import { prisma } from "@/lib/prisma";
+import { createGoal, listGoals } from "@/lib/services/goals";
 import { createGoalSchema } from "@/lib/validations/goal";
 
-export async function GET(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
+export const GET = authedRoute("Errore nel recupero dei goal", async ({ request, userId }) => {
+  const query = new URL(request.url).searchParams;
+  const month = query.get("month");
+  const year = query.get("year");
 
-    const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month");
-    const year = searchParams.get("year");
+  const goals = await listGoals(userId, {
+    month: month ? parseInt(month) : undefined,
+    year: year ? parseInt(year) : undefined,
+  });
 
-    const where: { userId: string; month?: number; year?: number } = {
-      userId: session.user.id,
-    };
+  return NextResponse.json(serializeMoney(goals));
+});
 
-    if (month) where.month = parseInt(month);
-    if (year) where.year = parseInt(year);
+export const POST = authedRoute("Errore nella creazione del goal", async ({ request, userId }) => {
+  const goal = await createGoal(userId, await parseBody(request, createGoalSchema));
 
-    const goals = await prisma.goal.findMany({
-      where,
-      orderBy: { name: "asc" },
-    });
-
-    return NextResponse.json(serializeMoney(goals));
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nel recupero dei goal" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const validated = createGoalSchema.safeParse(body);
-
-    if (!validated.success) {
-      return NextResponse.json(
-        { error: validated.error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
-    const { name, targetAmount, type, month, year } = validated.data;
-
-    const existing = await prisma.goal.findFirst({
-      where: {
-        userId: session.user.id,
-        name,
-        month,
-        year,
-      },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "Goal già esistente per questo mese" },
-        { status: 400 }
-      );
-    }
-
-    const goal = await prisma.goal.create({
-      data: {
-        name,
-        targetAmount,
-        type,
-        month,
-        year,
-        userId: session.user.id,
-      },
-    });
-
-    return NextResponse.json(serializeMoney(goal), { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nella creazione del goal" },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json(serializeMoney(goal), { status: 201 });
+});

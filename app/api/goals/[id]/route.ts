@@ -1,80 +1,17 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authedRoute, parseBody } from "@/lib/api/route";
 import { serializeMoney } from "@/lib/money";
-import { prisma } from "@/lib/prisma";
+import { deleteGoal, updateGoal } from "@/lib/services/goals";
 import { updateGoalSchema } from "@/lib/validations/goal";
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
+export const PUT = authedRoute<{ id: string }>("Errore nell'aggiornamento del goal", async ({ request, params, userId }) => {
+  const goal = await updateGoal(userId, params.id, await parseBody(request, updateGoalSchema));
 
-    const { id } = await params;
+  return NextResponse.json(serializeMoney(goal));
+});
 
-    const existing = await prisma.goal.findFirst({
-      where: { id, userId: session.user.id },
-    });
+export const DELETE = authedRoute<{ id: string }>("Errore nell'eliminazione del goal", async ({ params, userId }) => {
+  await deleteGoal(userId, params.id);
 
-    if (!existing) {
-      return NextResponse.json({ error: "Goal non trovato" }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const validated = updateGoalSchema.safeParse(body);
-
-    if (!validated.success) {
-      return NextResponse.json(
-        { error: validated.error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
-    const goal = await prisma.goal.update({
-      where: { id },
-      data: validated.data,
-    });
-
-    return NextResponse.json(serializeMoney(goal));
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nell'aggiornamento del goal" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
-
-    const { id } = await params;
-
-    const existing = await prisma.goal.findFirst({
-      where: { id, userId: session.user.id },
-    });
-
-    if (!existing) {
-      return NextResponse.json({ error: "Goal non trovato" }, { status: 404 });
-    }
-
-    await prisma.goal.delete({ where: { id } });
-
-    return NextResponse.json({ message: "Goal eliminato" });
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nell'eliminazione del goal" },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ message: "Goal eliminato" });
+});
