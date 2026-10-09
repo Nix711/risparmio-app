@@ -28,7 +28,7 @@ async function seedTwoUsers() {
 
 describe("GET /api/saving-goals", () => {
   it("risponde 401 senza sessione", async () => {
-    const response = await collection.GET();
+    const response = await collection.GET(jsonRequest("GET", "/api/saving-goals"));
 
     expect(response.status).toBe(401);
   });
@@ -37,7 +37,7 @@ describe("GET /api/saving-goals", () => {
     const { mine } = await seedTwoUsers();
     await prisma.goalContribution.create({ data: { goalId: mine.id, amount: "50.00", date: "2026-10-01" } });
 
-    const response = await collection.GET();
+    const response = await collection.GET(jsonRequest("GET", "/api/saving-goals"));
     const goals: SavingGoalResponse[] = await response.json();
 
     expect(response.status).toBe(200);
