@@ -16,11 +16,24 @@
 ## Architettura delle pagine
 | Pagina | Tipo | Note |
 |--------|------|-------|
-| `app/(dashboard)/page.tsx` | Server Component | Chiama Prisma direttamente |
+| `app/(dashboard)/page.tsx` | Server Component | Chiama `lib/services/dashboard.ts` |
 | `app/(dashboard)/expenses/` | Client Component | Usa API routes |
 | `app/(dashboard)/statistics/` | Client Component | Usa API routes |
 | `app/(dashboard)/profile/` | Client Component | Usa API routes |
 | `app/(auth)/login/` | Client Component | NextAuth signIn |
+
+---
+
+## API e livello di servizio
+```
+route handler (app/api/)  →  servizio (lib/services/)  →  Prisma
+```
+- **Route handler**: leggono la richiesta, chiamano un servizio e convertono gli importi con `serializeMoney`. Si scrivono con `authedRoute` di `lib/api/route.ts`, che risponde 401 senza sessione, o con `publicRoute` (solo la registrazione); il corpo si legge con `parseBody(request, schema)`
+- **Servizi**: la logica e le query. Ricevono `userId`, mai la sessione, e non conoscono HTTP: si possono chiamare anche da un Server Component, come fa la dashboard
+- **Errori**: un servizio lancia `NotFoundError` (404) o `InvalidRequestError` (400) di `lib/services/errors.ts`, e la route li traduce in status. Ogni altro errore diventa un 500 con il messaggio dato alla route e finisce nel log: l'errore vero non arriva al client
+- **Proprietà**: update e delete filtrano per `{ id, userId }` nella scrittura stessa, e `notFoundIfMissing` trasforma il P2025 di Prisma in `NotFoundError`. La risorsa di un altro utente risponde come una inesistente, mai 403
+- **Categorie**: l'utente vede le predefinite e le sue (`visibleTo` in `lib/services/categories.ts`), e un movimento può usare solo quelle (`assertUsableCategory`)
+- Gli importi restano `Decimal` nei servizi e diventano `number` nella route. Eccezione: `getDashboardData` restituisce già i numeri pronti per la pagina
 
 ---
 
@@ -67,7 +80,7 @@ npm run test:coverage   # coverage di lib/: fallisce se una misura scende sotto 
 
 **Ambiente**: Vitest non legge `.env`. La configurazione imposta una `ENCRYPTION_KEY` di prova e `TZ=UTC`, il fuso dei server di Vercel e di GitHub Actions.
 
-**Per ogni nuova route**: un test per il 401 senza sessione, il 400 con dati non validi, il 404 sulle risorse di un altro utente (che devono restare intatte) e il caso riuscito.
+**Per ogni nuova route**: le funzioni prodotte da `authedRoute` vogliono sempre la richiesta, anche quando non la usano (`GET(jsonRequest("GET", "/api/…"))`). Un test per il 401 senza sessione, il 400 con dati non validi, il 404 sulle risorse di un altro utente (che devono restare intatte) e il caso riuscito.
 
 **Bug noti**: sono test `it.fails`, che passano finché il bug esiste; `grep -rn "it.fails" lib tests` li elenca. Quando un bug viene corretto il test fallisce con "Expect test to fail" e va trasformato in un `it` normale. In un nuovo `it.fails` verificare l'effetto del bug (dati modificati, richiesta accettata), non uno status preciso: una correzione con uno status diverso resterebbe nascosta.
 
@@ -154,6 +167,7 @@ npm run start
 ---
 
 ## Pattern da rispettare
+- Route e pagine non chiamano Prisma: passano da un servizio di `lib/services/` (vedi "API e livello di servizio")
 - Usare `$extends` di Prisma v6, mai `$use`
 - Ogni modifica allo schema passa da una migration (`prisma migrate dev`), mai da `prisma db push`: senza migration la modifica non si può riprodurre su un altro database
 - Riavviare il dev server dopo modifiche a `lib/prisma.ts`
