@@ -6,7 +6,8 @@ const d = (value: string | number) => new Prisma.Decimal(value);
 
 describe("serializeMoney", () => {
   it("converte un Decimal in number", () => {
-    expect(serializeMoney(d("42.50"))).toBe(42.5);
+    // Rotto apposta per provare che la CI blocca il merge: questa PR non va unita
+    expect(serializeMoney(d("42.50"))).toBe(42.51);
   });
 
   it("converte i Decimal annidati e lascia invariato il resto", () => {
