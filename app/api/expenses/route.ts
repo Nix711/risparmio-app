@@ -1,97 +1,27 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authedRoute, parseBody } from "@/lib/api/route";
 import { serializeMoney } from "@/lib/money";
-import { prisma } from "@/lib/prisma";
-import { createExpenseSchema } from "@/lib/validations/expense";
+import { createExpense, listExpenses } from "@/lib/services/expenses";
+import { createExpenseSchema, transactionTypeSchema } from "@/lib/validations/expense";
 
-export async function GET(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
+export const GET = authedRoute("Errore nel recupero delle transazioni", async ({ request, userId }) => {
+  const query = new URL(request.url).searchParams;
+  const month = query.get("month");
+  const year = query.get("year");
+  const type = transactionTypeSchema.safeParse(query.get("type"));
 
-    const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month");
-    const year = searchParams.get("year");
-    const categoryId = searchParams.get("categoryId");
-    const type = searchParams.get("type");
+  const expenses = await listExpenses(userId, {
+    ...(month && year ? { month: parseInt(month), year: parseInt(year) } : {}),
+    categoryId: query.get("categoryId") ?? undefined,
+    // Un tipo sconosciuto non filtra, invece di dare errore
+    type: type.success ? type.data : undefined,
+  });
 
-    const where: {
-      userId: string;
-      date?: { gte: Date; lte: Date };
-      categoryId?: string;
-      type?: string;
-    } = {
-      userId: session.user.id,
-    };
+  return NextResponse.json(serializeMoney(expenses));
+});
 
-    if (month && year) {
-      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-      const endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
-      where.date = { gte: startDate, lte: endDate };
-    }
+export const POST = authedRoute("Errore nella creazione della transazione", async ({ request, userId }) => {
+  const expense = await createExpense(userId, await parseBody(request, createExpenseSchema));
 
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
-
-    if (type && (type === "expense" || type === "income")) {
-      where.type = type;
-    }
-
-    const expenses = await prisma.expense.findMany({
-      where,
-      include: { category: true },
-      orderBy: { date: "desc" },
-    });
-
-    return NextResponse.json(serializeMoney(expenses));
-  } catch (error) {
-    console.error("Errore expenses GET:", error);
-    return NextResponse.json(
-      { error: "Errore nel recupero delle transazioni" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const validated = createExpenseSchema.safeParse(body);
-
-    if (!validated.success) {
-      return NextResponse.json(
-        { error: validated.error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
-    const { amount, description, categoryId, date, type } = validated.data;
-
-    const expense = await prisma.expense.create({
-      data: {
-        amount,
-        description,
-        categoryId,
-        date: new Date(date),
-        type: type || "expense",
-        userId: session.user.id,
-      },
-      include: { category: true },
-    });
-
-    return NextResponse.json(serializeMoney(expense), { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nella creazione della transazione" },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json(serializeMoney(expense), { status: 201 });
+});
