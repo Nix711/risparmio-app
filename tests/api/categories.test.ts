@@ -111,15 +111,17 @@ describe("DELETE /api/categories/[id]", () => {
     expect(await prisma.category.count({ where: { id: category.id } })).toBe(1);
   });
 
-  // Le altre route rispondono 404 sulle risorse altrui; qui 403, che conferma che la categoria esiste
-  it("risponde 403 su una categoria di un altro utente e non la cancella", async () => {
+  // Un 403 confermerebbe che la categoria esiste: la risposta dev'essere quella di un id inesistente
+  it("su una categoria di un altro utente risponde come se non esistesse, e non la cancella", async () => {
     const [me, other] = await Promise.all([createUser(), createUser()]);
     const theirs = await createCategory({ name: "Golf", userId: other.id });
     signInAs(me);
 
     const response = await DELETE(jsonRequest("DELETE", `/api/categories/${theirs.id}`), routeContext(theirs.id));
+    const missing = await DELETE(jsonRequest("DELETE", "/api/categories/x"), routeContext("x"));
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual(await missing.json());
     expect(await prisma.category.count({ where: { id: theirs.id } })).toBe(1);
   });
 

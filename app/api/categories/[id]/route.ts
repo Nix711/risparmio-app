@@ -14,8 +14,9 @@ export async function DELETE(
 
     const { id } = await params;
 
+    // Solo le categorie che l'utente vede: una categoria di un altro utente risulta inesistente
     const category = await prisma.category.findFirst({
-      where: { id },
+      where: { id, OR: [{ isDefault: true }, { userId: session.user.id }] },
     });
 
     if (!category) {
@@ -30,10 +31,6 @@ export async function DELETE(
         { error: "Non puoi eliminare una categoria predefinita" },
         { status: 400 }
       );
-    }
-
-    if (category.userId !== session.user.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 403 });
     }
 
     // Controlla se ci sono spese associate
