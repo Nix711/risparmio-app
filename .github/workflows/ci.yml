@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  # Ogni pull request, verso qualunque branch
+  pull_request:
+  # Tiene aggiornato il badge del README con lo stato di ciò che è in produzione
+  push:
+    branches: [main]
+
+# Un nuovo push sulla stessa PR annulla il giro precedente, ormai inutile.
+# Su main invece ogni giro arriva in fondo: è lo stato del codice pubblicato.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Il workflow legge il codice e basta: il token di GitHub non può scrivere sul repo
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint e type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          # Legge engines.node da package.json, lo stesso campo che usa Vercel
+          node-version-file: package.json
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Genera in .next/types (ignorata da git) i tipi con cui Next controlla le firme
+      # di pagine, layout e route handler: senza, tsc salterebbe quel controllo
+      - run: npx next typegen
+      - run: npm run lint
+      - run: npx tsc --noEmit
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      # Stessa immagine e stesse credenziali di docker-compose.yml: la URL di test
+      # scritta in vitest.config.mts funziona così com'è
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: balancebook
+          POSTGRES_PASSWORD: balancebook
+          POSTGRES_DB: balancebook
+        ports:
+          - 5432:5432
+        # I test partono solo quando Postgres accetta connessioni
+        options: >-
+          --health-cmd "pg_isready -U balancebook -d balancebook"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Con la coverage, non npm test: così anche la soglia dell'80% su lib/ blocca la PR
+      - run: npm run test:coverage
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: npm
+      - run: npm ci
+      # Comprende prisma generate
+      - run: npm run build

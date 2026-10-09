@@ -2,13 +2,23 @@
   "name": "balancebook",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --project unit",
+    "test:coverage": "vitest run --coverage",
     "encrypt-existing": "npx tsx scripts/encrypt-descriptions.ts",
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "prisma db seed",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -25,13 +35,15 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "prisma": "^6.19.1",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.3"
   }
 }
