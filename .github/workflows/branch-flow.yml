@@ -1,0 +1,31 @@
+name: Flusso dei branch
+
+# main si aggiorna solo con una pull request da staging (CLAUDE.md, "Branch & Deploy").
+# È un workflow a parte perché deve girare anche quando si cambia il branch di
+# destinazione di una PR (evento "edited"): in ci.yml lo stesso evento rilancerebbe
+# tutti i test a ogni modifica del titolo o della descrizione.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+# Non legge nemmeno il codice: gli bastano i dati della PR
+permissions: {}
+
+jobs:
+  from-staging:
+    name: PR verso main solo da staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Controlla il branch di partenza
+        # Il nome del branch lo sceglie chi apre la PR: passa da una variabile d'ambiente
+        # e non dentro lo script, dove potrebbe iniettare comandi
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        # Anche il repo: un fork può avere un branch che si chiama staging
+        run: |
+          if [ "$HEAD_REF" != "staging" ] || [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::error::Verso main si arriva solo da staging, non da $HEAD_REPO:$HEAD_REF"
+            exit 1
+          fi
