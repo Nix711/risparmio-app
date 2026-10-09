@@ -9,6 +9,7 @@
 - **Charts**: Chart.js + react-chartjs-2 (statistics page) + SVG server-side (dashboard trend)
 - **Font**: Inter via `next/font/google`
 - **Test**: Vitest 5 — unit e integrazione su Postgres, coverage con v8
+- **CI**: GitHub Actions — lint, type-check, test e build su ogni pull request
 
 ---
 
@@ -72,6 +73,26 @@ npm run test:coverage   # coverage di lib/: fallisce se una misura scende sotto 
 
 ---
 
+## CI
+GitHub Actions, in `.github/workflows/`:
+
+| Workflow | Quando | Job |
+|----------|--------|-----|
+| `ci.yml` | ogni pull request e ogni push su `main` | `Lint e type-check`, `Test`, `Build`, in parallelo |
+| `branch-flow.yml` | pull request verso `main`, anche quando ne cambia la destinazione | `PR verso main solo da staging` |
+
+- Il job `Test` avvia un Postgres 17 come servizio, con le credenziali di `docker-compose.yml`, e lancia `npm run test:coverage`: anche la soglia dell'80% blocca la PR
+- `next typegen` prima di `tsc` genera in `.next/types` i tipi con cui Next controlla le firme di pagine, layout e route handler
+- La versione di Node è `engines.node` in `package.json`, letta sia da `setup-node` sia da Vercel: per cambiarla basta quel campo
+- I nomi dei job sono i check obbligatori dei ruleset (Settings → Rules → Rulesets): rinominando un job va aggiornato anche il ruleset, altrimenti le PR restano in attesa di un check che non arriva più
+
+**Ruleset**
+- `main`: pull request obbligatoria, con i check verdi
+- `dev` e `staging`: solo i check verdi, senza pull request obbligatoria. Così il fast-forward dopo il rilascio viene accettato, perché il commit di `main` ha già i check, mentre un push di codice mai testato viene rifiutato
+- Nessuna eccezione, neanche per l'admin. Se la CI si blocca per una causa esterna, si disattiva il ruleset per il tempo necessario
+
+---
+
 ## Branch & Deploy
 ```
 branch di lavoro  →  dev  →  staging  →  main
@@ -79,12 +100,12 @@ branch di lavoro  →  dev  →  staging  →  main
 - **branch di lavoro** (`fix/…`, `refactor/…`, `test/…`, `chore/…`, `docs/…`): uno per intervento, unito in `dev` con una pull request
 - **dev**: integrazione, nessun deploy
 - **staging**: branch di rilascio, contiene esattamente ciò che andrà in produzione; nessun deploy
-- **main**: deploy automatico su Vercel (produzione). Si aggiorna solo con una pull request da `staging`, mai con push diretto
+- **main**: deploy automatico su Vercel (produzione). Si aggiorna solo con una pull request da `staging`, mai con push diretto: lo impongono il ruleset di `main` e `branch-flow.yml`
 - Solo `main` viene pubblicato: lo stabilisce `git.deploymentEnabled` in `vercel.json`, perché di default Vercel pubblicherebbe ogni branch
 - Merge con **Create a merge commit**, non squash, per tenere leggibili i singoli commit
 
 ### Dopo ogni rilascio
-Riportare `dev` e `staging` su `main` con un fast-forward:
+Quando la CI su `main` è verde, riportare `dev` e `staging` su `main` con un fast-forward. Prima i ruleset rifiuterebbero il push, perché il commit non ha ancora i check:
 ```bash
 git fetch
 git push origin origin/main:dev origin/main:staging
