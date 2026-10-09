@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { CreateExpenseInput, TransactionType, UpdateExpenseInput } from "@/lib/validations/expense";
+import { assertUsableCategory } from "./categories";
 import { notFoundIfMissing } from "./errors";
 
 export interface ExpenseFilters {
@@ -26,7 +27,9 @@ export function listExpenses(userId: string, { month, year, categoryId, type }: 
   });
 }
 
-export function createExpense(userId: string, { amount, description, categoryId, date, type }: CreateExpenseInput) {
+export async function createExpense(userId: string, { amount, description, categoryId, date, type }: CreateExpenseInput) {
+  await assertUsableCategory(userId, categoryId);
+
   return prisma.expense.create({
     data: { amount, description, categoryId, date: new Date(date), type, userId },
     include: { category: true },
@@ -36,6 +39,10 @@ export function createExpense(userId: string, { amount, description, categoryId,
 /** Aggiorna solo i campi presenti in `input`: per Prisma un campo undefined resta com'è. */
 export async function updateExpense(userId: string, id: string, input: UpdateExpenseInput) {
   const { amount, description, categoryId, date, type } = input;
+  if (categoryId !== undefined) {
+    await assertUsableCategory(userId, categoryId);
+  }
+
   try {
     return await prisma.expense.update({
       // userId nella scrittura stessa: il movimento di un altro utente risulta inesistente

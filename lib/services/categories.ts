@@ -7,6 +7,20 @@ function visibleTo(userId: string) {
   return { OR: [{ isDefault: true }, { userId }] };
 }
 
+/**
+ * Un movimento può usare solo una categoria che l'utente vede. Il messaggio è lo stesso
+ * per una categoria inesistente e per una di un altro utente: la risposta non rivela quale.
+ */
+export async function assertUsableCategory(userId: string, categoryId: string) {
+  const category = await prisma.category.findFirst({
+    where: { id: categoryId, ...visibleTo(userId) },
+    select: { id: true },
+  });
+  if (!category) {
+    throw new InvalidRequestError("Categoria non valida");
+  }
+}
+
 export function listCategories(userId: string) {
   return prisma.category.findMany({
     where: visibleTo(userId),
