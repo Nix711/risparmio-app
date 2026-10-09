@@ -8,7 +8,7 @@ import { signInAs } from "../helpers/session";
 
 describe("GET /api/categories", () => {
   it("risponde 401 senza sessione", async () => {
-    const response = await GET();
+    const response = await GET(jsonRequest("GET", "/api/categories"));
 
     expect(response.status).toBe(401);
   });
@@ -20,7 +20,7 @@ describe("GET /api/categories", () => {
     await createCategory({ name: "Golf", userId: other.id });
     signInAs(me);
 
-    const response = await GET();
+    const response = await GET(jsonRequest("GET", "/api/categories"));
     const categories: { name: string }[] = await response.json();
 
     expect(response.status).toBe(200);
