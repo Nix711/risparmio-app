@@ -37,9 +37,19 @@ export function authedRoute<P extends Params = Record<string, never>>(
   });
 }
 
-/** Legge il corpo JSON e lo valida. Con dati non validi lancia InvalidRequestError con il primo messaggio di Zod. */
+/**
+ * Legge il corpo JSON e lo valida. Con un corpo che non è JSON, o con dati non validi,
+ * lancia InvalidRequestError: è un errore di chi chiama, non del server.
+ */
 export async function parseBody<S extends z.ZodType>(request: Request, schema: S): Promise<z.output<S>> {
-  const result = schema.safeParse(await request.json());
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    throw new InvalidRequestError("Richiesta non valida");
+  }
+
+  const result = schema.safeParse(body);
   if (!result.success) {
     throw new InvalidRequestError(result.error.issues[0].message);
   }

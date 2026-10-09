@@ -102,4 +102,28 @@ describe("parseBody", () => {
     await expect(parsing).rejects.toThrow(InvalidRequestError);
     await expect(parsing).rejects.toThrow("Nome richiesto");
   });
+
+  it.each([
+    ["un corpo che non è JSON", "{nome: Casa"],
+    ["un corpo vuoto", ""],
+  ])("con %s lancia InvalidRequestError", async (_, body) => {
+    const parsing = parseBody(new Request("http://localhost/api/prova", { method: "POST", body }), schema);
+
+    await expect(parsing).rejects.toThrow(InvalidRequestError);
+    await expect(parsing).rejects.toThrow("Richiesta non valida");
+  });
+
+  // È un errore di chi chiama, non del server: un 500 finirebbe anche nel log degli errori
+  it("in una route, un corpo che non è JSON riceve 400 e non 500", async () => {
+    signInAs(await createUser());
+    const route = authedRoute("Errore nella creazione", async ({ request }) => {
+      await parseBody(request, schema);
+      return NextResponse.json({ ok: true });
+    });
+
+    const response = await route(new Request("http://localhost/api/prova", { method: "POST", body: "{nome: Casa" }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Richiesta non valida" });
+  });
 });
