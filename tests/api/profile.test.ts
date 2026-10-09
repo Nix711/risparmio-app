@@ -16,7 +16,7 @@ async function storedPassword(userId: string) {
 
 describe("GET /api/profile", () => {
   it("risponde 401 senza sessione", async () => {
-    const response = await GET();
+    const response = await GET(jsonRequest("GET", "/api/profile"));
 
     expect(response.status).toBe(401);
   });
@@ -25,7 +25,7 @@ describe("GET /api/profile", () => {
     const me = await createUser();
     signInAs(me);
 
-    const response = await GET();
+    const response = await GET(jsonRequest("GET", "/api/profile"));
     const profile = await response.json();
 
     expect(response.status).toBe(200);
