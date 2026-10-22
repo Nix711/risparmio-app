@@ -1,89 +1,20 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authedRoute, parseBody } from "@/lib/api/route";
 import { serializeMoney } from "@/lib/money";
-import { prisma } from "@/lib/prisma";
+import { deleteExpense, updateExpense } from "@/lib/services/expenses";
 import { updateExpenseSchema } from "@/lib/validations/expense";
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
-
-    const { id } = await params;
-
-    const existing = await prisma.expense.findFirst({
-      where: { id, userId: session.user.id },
-    });
-
-    if (!existing) {
-      return NextResponse.json({ error: "Spesa non trovata" }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const validated = updateExpenseSchema.safeParse(body);
-
-    if (!validated.success) {
-      return NextResponse.json(
-        { error: validated.error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
-    const { amount, description, categoryId, date, type } = validated.data;
-
-    const expense = await prisma.expense.update({
-      where: { id },
-      data: {
-        ...(amount !== undefined && { amount }),
-        ...(description !== undefined && { description }),
-        ...(categoryId !== undefined && { categoryId }),
-        ...(date !== undefined && { date: new Date(date) }),
-        ...(type !== undefined && { type }),
-      },
-      include: { category: true },
-    });
+export const PUT = authedRoute<{ id: string }>(
+  "Errore nell'aggiornamento della spesa",
+  async ({ request, params, userId }) => {
+    const expense = await updateExpense(userId, params.id, await parseBody(request, updateExpenseSchema));
 
     return NextResponse.json(serializeMoney(expense));
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nell'aggiornamento della spesa" },
-      { status: 500 }
-    );
   }
-}
+);
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-    }
+export const DELETE = authedRoute<{ id: string }>("Errore nell'eliminazione della spesa", async ({ params, userId }) => {
+  await deleteExpense(userId, params.id);
 
-    const { id } = await params;
-
-    const existing = await prisma.expense.findFirst({
-      where: { id, userId: session.user.id },
-    });
-
-    if (!existing) {
-      return NextResponse.json({ error: "Spesa non trovata" }, { status: 404 });
-    }
-
-    await prisma.expense.delete({ where: { id } });
-
-    return NextResponse.json({ message: "Spesa eliminata" });
-  } catch {
-    return NextResponse.json(
-      { error: "Errore nell'eliminazione della spesa" },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ message: "Spesa eliminata" });
+});
