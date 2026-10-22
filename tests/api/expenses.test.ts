@@ -219,25 +219,47 @@ describe("categoria di un movimento", () => {
     expect(response.status).toBe(201);
   });
 
-  // BUG: categoryId non viene confrontato con l'utente della sessione. Il movimento prende
-  // la categoria di un altro utente, ne mostra il nome e gli impedisce di cancellarla.
-  it.fails("POST non accetta la categoria di un altro utente", async () => {
+  // Accettare la categoria di un altro utente gli mostrerebbe il suo nome nel movimento
+  // e gli impedirebbe di cancellarla. Inesistente o altrui, la risposta è la stessa.
+  it("POST non accetta la categoria di un altro utente", async () => {
     const { otherCategory } = await seedTwoUsers();
 
     const response = await POST(jsonRequest("POST", "/api/expenses", { amount: 10, categoryId: otherCategory.id, date: "2026-10-08" }));
 
-    expect(response.ok).toBe(false);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Categoria non valida" });
     expect(await prisma.expense.count()).toBe(0);
   });
 
-  it.fails("PUT non sposta un movimento nella categoria di un altro utente", async () => {
+  it("POST risponde 400 su una categoria che non esiste", async () => {
+    await seedTwoUsers();
+
+    const response = await POST(jsonRequest("POST", "/api/expenses", { amount: 10, categoryId: "inesistente", date: "2026-10-08" }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Categoria non valida" });
+  });
+
+  it("PUT non sposta un movimento nella categoria di un altro utente", async () => {
     const { me, myCategory, otherCategory } = await seedTwoUsers();
     const mine = await createExpense({ userId: me.id, categoryId: myCategory.id, amount: "10.00", date: "2026-10-01" });
 
     const response = await PUT(jsonRequest("PUT", `/api/expenses/${mine.id}`, { categoryId: otherCategory.id }), routeContext(mine.id));
     const unchanged = await prisma.expense.findUnique({ where: { id: mine.id } });
 
-    expect(response.ok).toBe(false);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Categoria non valida" });
     expect(unchanged?.categoryId).toBe(myCategory.id);
+  });
+
+  it("PUT sposta un movimento in un'altra categoria dell'utente", async () => {
+    const { me, myCategory } = await seedTwoUsers();
+    const mine = await createExpense({ userId: me.id, categoryId: myCategory.id, amount: "10.00", date: "2026-10-01" });
+    const gym = await createCategory({ name: "Palestra", userId: me.id });
+
+    const response = await PUT(jsonRequest("PUT", `/api/expenses/${mine.id}`, { categoryId: gym.id }), routeContext(mine.id));
+
+    expect(response.status).toBe(200);
+    expect((await prisma.expense.findUnique({ where: { id: mine.id } }))?.categoryId).toBe(gym.id);
   });
 });
