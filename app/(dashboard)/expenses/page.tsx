@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { AMOUNT_HINT, AMOUNT_PATTERN, parseAmountInput } from "@/lib/utils/amount";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import styles from "./page.module.css";
 
@@ -201,7 +202,7 @@ function ExpensesPageContent() {
     const formData = new FormData(e.currentTarget);
 
     const data = {
-      amount: parseFloat(formData.get("amount") as string),
+      amount: parseAmountInput(formData.get("amount") as string),
       description: formData.get("description") as string,
       categoryId: formData.get("categoryId") as string,
       date: formData.get("date") as string,
@@ -504,11 +505,13 @@ function ExpensesPageContent() {
 
                 <Input
                   name="amount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  pattern={AMOUNT_PATTERN}
+                  title={AMOUNT_HINT}
+                  autoComplete="off"
                   label="Importo (€)"
-                  placeholder="0.00"
+                  placeholder="0,00"
                   defaultValue={editingExpense?.amount}
                   required
                 />
